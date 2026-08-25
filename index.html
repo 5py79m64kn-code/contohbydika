@@ -413,7 +413,7 @@ font-size:12px
 <header class="header">
 
 <h1 class="title">
-🔥 Detektor Api & Bara
+🔥 Detektor Api
 </h1>
 
 <div class="subtitle">
@@ -576,8 +576,7 @@ id="log">
 <div class="tip">
 
 Sistem menggunakan analisis warna dan
-kecerahan untuk mencari indikasi api atau
-bara kecil. Hasilnya bukan alat keselamatan
+kecerahan untuk mencari indikasi api, Hasilnya bukan alat keselamatan
 kebakaran profesional.
 
 </div>
@@ -588,7 +587,7 @@ kebakaran profesional.
 <footer>
 
 <div>
-Fire & Ember Detector • HTML + CSS + JavaScript
+Fire
 </div>
 
 <div class="powered">
@@ -620,7 +619,7 @@ API TERDETEKSI!
 </h2>
 
 <p>
-Kemungkinan sumber api atau bara
+Kemungkinan sumber api
 terdeteksi oleh kamera.
 </p>
 
@@ -1013,7 +1012,8 @@ overlay.classList.add(
 );
 
 statusElement.textContent =
-"🚨 API TERDETEKSI! Kemungkinan sumber api atau bara terlihat.";
+"🚨 API TERDETEKSI!! 
+cepat padamkan apinya sebelum kebakaran";
 
 statusElement.classList.add(
 "danger"
@@ -1024,7 +1024,7 @@ detectionFrame.classList.add(
 );
 
 log(
-"🚨 API/BARA TERDETEKSI! Skor: "+
+"🚨 API TERDETEKSI! Skor: "+
 score+"%",
 "red"
 );
@@ -1032,7 +1032,7 @@ score+"%",
 alarm();
 
 speak(
-"Peringatan. Api atau bara terdeteksi di depan kamera."
+"peringatan api terdeteksi di depan kamera"
 );
 
 }
@@ -1150,7 +1150,7 @@ const hotPoint =
 r > 190 &&
 g > 65 &&
 b < 150 &&
-brightness > 125;
+brightness > 145;
 
 
 const emberPoint =
@@ -1261,7 +1261,7 @@ detectionFrame.classList.remove(
 if(stream){
 
 statusElement.textContent =
-"🔍 Memindai api dan bara secara otomatis.";
+"🔍 Memindai api secara otomatis.";
 
 }
 
@@ -1469,7 +1469,7 @@ setTimeout(
 ()=>{
 
 speak(
-"Kamera aktif. Sistem deteksi api dan bara berjalan otomatis."
+"Kamera aktif. Sistem deteksi api dan berjalan otomatis."
 );
 
 },
