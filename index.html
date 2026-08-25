@@ -3,411 +3,1575 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
 <title>Fire Detector</title>
 
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;min-height:100%;background:#050b15;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-body{display:flex;justify-content:center}
-.app{width:100%;max-width:760px;min-height:100vh;background:#07101f;overflow:hidden}
-.header{padding:26px 20px 22px;background:linear-gradient(180deg,#19273d,#101b2d);border-bottom:1px solid #30415c}
-.title{margin:0;font-size:27px;font-weight:800}.subtitle{margin-top:7px;color:#9eabc0;font-size:14px}
-.card{margin:16px;padding:17px;border-radius:16px;background:linear-gradient(145deg,#16243a,#0e192c);border:1px solid #263750;box-shadow:0 12px 30px rgba(0,0,0,.2)}
-.section-title{margin:0 0 14px;font-size:19px;font-weight:800}
-.camera{position:relative;width:100%;height:330px;overflow:hidden;border-radius:14px;background:#02060b;border:1px solid #2b3a52}
-video{width:100%;height:100%;object-fit:cover;display:block;background:#02060b}
-.placeholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#aab6c9;background:radial-gradient(circle at center,#17243a 0,#060b14 70%)}
-.placeholder .icon{font-size:48px;margin-bottom:8px}
-.badge{position:absolute;right:12px;top:12px;padding:8px 12px;border-radius:99px;background:rgba(5,12,24,.8);border:1px solid #33445f;font-size:12px;font-weight:800}
-.badge.online{color:#5be68f;border-color:#1e9d58}.badge.offline{color:#ff8585;border-color:#9e3e3e}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
-button{border:0;border-radius:12px;padding:14px 10px;font-size:14px;font-weight:800;color:#fff;background:#2a3951;cursor:pointer}
-button:active{transform:scale(.98)}
-button.primary{background:#3184ff}.stop{background:#3a4659!important}.voice{background:#7657d9}
-button:disabled{opacity:.45}
-.status{margin-top:12px;padding:12px;border-radius:10px;background:#091222;border:1px solid #1e2c43;color:#b9c5d6;font-size:13px;line-height:1.5}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.stat{padding:16px 7px;text-align:center;background:#091426;border:1px solid #263750;border-radius:12px}
-.stat strong{display:block;font-size:25px;color:#4c92ff;margin-bottom:5px}
-.stat span{font-size:11px;color:#9daabd}
-.log{max-height:320px;overflow:auto;background:#071120;border:1px solid #1d2b41;border-radius:12px}
-.log-item{padding:10px 11px;border-bottom:1px solid #18253a;font-family:monospace;font-size:11px}
-.log-item:last-child{border:0}.green{color:#35dd78}.red{color:#ff6262}.white{color:#d9e0ec}
-.tip{margin-top:12px;color:#8f9db3;font-size:11px;line-height:1.55}
-footer{padding:5px 16px 28px;text-align:center;color:#6e7c93;font-size:11px}
-.overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72)}
-.overlay.show{display:flex}
-.alert{width:min(620px,100%);padding:25px 20px 20px;text-align:center;background:#18253a;border:2px solid #ef5350;border-radius:18px;box-shadow:0 25px 80px rgba(0,0,0,.55)}
-.alert-icon{font-size:58px}.alert h2{margin:7px 0;color:#ff5b5b;font-size:29px}.alert p{color:#d6deeb}
-.detail{margin:17px 0;padding:14px;text-align:left;border-radius:11px;background:#091426;color:#ccd5e2;line-height:1.8}
-.alert button{width:100%;background:#ef5350}
-@media(max-width:520px){.title{font-size:23px}.camera{height:285px}.card{margin:12px;padding:14px}.stats strong{font-size:21px}}
+*{
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent
+}
+
+html,body{
+margin:0;
+padding:0;
+min-height:100%;
+background:#050b15;
+color:#fff;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif
+}
+
+body{
+display:flex;
+justify-content:center
+}
+
+.app{
+width:100%;
+max-width:760px;
+min-height:100vh;
+background:#07101f;
+overflow:hidden
+}
+
+.header{
+padding:26px 20px 22px;
+background:linear-gradient(180deg,#19273d,#101b2d);
+border-bottom:1px solid #30415c
+}
+
+.title{
+margin:0;
+font-size:27px;
+font-weight:800
+}
+
+.subtitle{
+margin-top:7px;
+color:#9eabc0;
+font-size:14px
+}
+
+.card{
+margin:16px;
+padding:17px;
+border-radius:16px;
+background:linear-gradient(145deg,#16243a,#0e192c);
+border:1px solid #263750;
+box-shadow:0 12px 30px rgba(0,0,0,.2)
+}
+
+.section-title{
+margin:0 0 14px;
+font-size:19px;
+font-weight:800
+}
+
+.camera{
+position:relative;
+width:100%;
+height:330px;
+overflow:hidden;
+border-radius:14px;
+background:#02060b;
+border:1px solid #2b3a52
+}
+
+video{
+width:100%;
+height:100%;
+object-fit:cover;
+display:block;
+background:#02060b
+}
+
+.placeholder{
+position:absolute;
+inset:0;
+display:grid;
+place-items:center;
+text-align:center;
+color:#aab6c9;
+background:radial-gradient(circle at center,#17243a 0,#060b14 70%)
+}
+
+.placeholder .icon{
+font-size:48px;
+margin-bottom:8px
+}
+
+.badge{
+position:absolute;
+right:12px;
+top:12px;
+padding:8px 12px;
+border-radius:99px;
+background:rgba(5,12,24,.8);
+border:1px solid #33445f;
+font-size:12px;
+font-weight:800;
+z-index:5
+}
+
+.badge.online{
+color:#5be68f;
+border-color:#1e9d58
+}
+
+.badge.offline{
+color:#ff8585;
+border-color:#9e3e3e
+}
+
+.scan{
+position:absolute;
+left:0;
+width:100%;
+height:2px;
+background:#31ff75;
+box-shadow:0 0 12px #31ff75;
+opacity:.6;
+animation:scan 2.5s linear infinite;
+pointer-events:none
+}
+
+@keyframes scan{
+0%{top:0}
+50%{top:100%}
+100%{top:0}
+}
+
+.detection-frame{
+position:absolute;
+left:8%;
+top:12%;
+width:84%;
+height:76%;
+border:2px solid rgba(255,255,255,.15);
+border-radius:18px;
+pointer-events:none
+}
+
+.detection-frame.fire{
+border-color:#ff3030;
+box-shadow:
+0 0 20px rgba(255,0,0,.8),
+inset 0 0 20px rgba(255,0,0,.3)
+}
+
+.controls{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:13px
+}
+
+button{
+border:0;
+border-radius:12px;
+padding:14px 10px;
+font-size:14px;
+font-weight:800;
+color:#fff;
+background:#2a3951;
+cursor:pointer
+}
+
+button:active{
+transform:scale(.98)
+}
+
+button.primary{
+background:#3184ff
+}
+
+button.stop{
+background:#3a4659
+}
+
+button.voice{
+background:#7657d9;
+grid-column:1/-1
+}
+
+button:disabled{
+opacity:.45
+}
+
+.status{
+margin-top:12px;
+padding:12px;
+border-radius:10px;
+background:#091222;
+border:1px solid #1e2c43;
+color:#b9c5d6;
+font-size:13px;
+line-height:1.5
+}
+
+.status.danger{
+background:#641c1c;
+border-color:#ff3838;
+color:#fff;
+animation:danger .6s infinite alternate
+}
+
+@keyframes danger{
+from{
+box-shadow:0 0 5px rgba(255,0,0,.3)
+}
+to{
+box-shadow:0 0 25px rgba(255,0,0,.9)
+}
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:9px
+}
+
+.stat{
+padding:16px 7px;
+text-align:center;
+background:#091426;
+border:1px solid #263750;
+border-radius:12px
+}
+
+.stat strong{
+display:block;
+font-size:25px;
+color:#4c92ff;
+margin-bottom:5px
+}
+
+.stat span{
+font-size:11px;
+color:#9daabd
+}
+
+.log{
+max-height:320px;
+overflow:auto;
+background:#071120;
+border:1px solid #1d2b41;
+border-radius:12px
+}
+
+.log-item{
+padding:10px 11px;
+border-bottom:1px solid #18253a;
+font-family:monospace;
+font-size:11px
+}
+
+.log-item:last-child{
+border:0
+}
+
+.green{
+color:#35dd78
+}
+
+.red{
+color:#ff6262
+}
+
+.white{
+color:#d9e0ec
+}
+
+.tip{
+margin-top:12px;
+color:#8f9db3;
+font-size:11px;
+line-height:1.55
+}
+
+footer{
+padding:5px 16px 28px;
+text-align:center;
+color:#6e7c93;
+font-size:11px
+}
+
+.powered{
+margin-top:5px
+}
+
+.powered b{
+color:#ff3b30
+}
+
+.overlay{
+position:fixed;
+inset:0;
+z-index:50;
+display:none;
+align-items:center;
+justify-content:center;
+padding:20px;
+background:rgba(0,0,0,.8)
+}
+
+.overlay.show{
+display:flex
+}
+
+.alert{
+width:min(620px,100%);
+padding:25px 20px 20px;
+text-align:center;
+background:#18253a;
+border:2px solid #ef5350;
+border-radius:18px;
+box-shadow:0 25px 80px rgba(0,0,0,.55)
+}
+
+.alert-icon{
+font-size:58px
+}
+
+.alert h2{
+margin:7px 0;
+color:#ff5b5b;
+font-size:29px
+}
+
+.alert p{
+color:#d6deeb
+}
+
+.detail{
+margin:17px 0;
+padding:14px;
+text-align:left;
+border-radius:11px;
+background:#091426;
+color:#ccd5e2;
+line-height:1.8
+}
+
+.alert button{
+width:100%;
+background:#ef5350
+}
+
+@media(max-width:520px){
+
+.title{
+font-size:23px
+}
+
+.camera{
+height:285px
+}
+
+.card{
+margin:12px;
+padding:14px
+}
+
+.stats strong{
+font-size:21px
+}
+
+}
 </style>
 </head>
 
 <body>
+
 <div class="app">
 
 <header class="header">
-<h1 class="title">🔥 Detektor Api Kamera HP</h1>
-<div class="subtitle">Kamera aktif = deteksi otomatis berjalan.</div>
+
+<h1 class="title">
+🔥 Detektor Korek Api
+</h1>
+
+<div class="subtitle">
+Deteksi otomatis korek api yang menyala di depan kamera.
+</div>
+
 </header>
 
+
 <section class="card">
+
 <div class="camera">
-<video id="video" autoplay muted playsinline></video>
 
-<div class="placeholder" id="placeholder">
+<video
+id="video"
+autoplay
+muted
+playsinline>
+</video>
+
+
+<div
+class="placeholder"
+id="placeholder">
+
 <div>
-<div class="icon">📷</div>
-<b>Kamera belum aktif</b><br>
-<small>Tekan Mulai Kamera untuk memulai</small>
-</div>
+
+<div class="icon">
+📷
 </div>
 
-<div class="badge offline" id="badge">● OFFLINE</div>
+<b>
+Kamera belum aktif
+</b>
+
+<br>
+
+<small>
+Tekan Mulai Kamera untuk memulai
+</small>
+
 </div>
+
+</div>
+
+
+<div
+class="badge offline"
+id="badge">
+
+● OFFLINE
+
+</div>
+
+
+<div
+class="detection-frame"
+id="detectionFrame">
+</div>
+
+
+<div class="scan"></div>
+
+</div>
+
 
 <div class="controls">
-<button class="primary" id="start">▶ Mulai Kamera & Deteksi</button>
-<button class="stop" id="stop" disabled>■ Matikan</button>
-<button class="voice" id="testVoice">🔊 Tes Suara</button>
+
+<button
+class="primary"
+id="start">
+
+▶ Mulai Kamera
+
+</button>
+
+
+<button
+class="stop"
+id="stop"
+disabled>
+
+■ Matikan
+
+</button>
+
+
+<button
+class="voice"
+id="testVoice">
+
+🔊 Tes Suara
+
+</button>
+
 </div>
 
-<div class="status" id="status">
-Tekan tombol biru. Setelah kamera aktif, deteksi langsung berjalan otomatis.
+
+<div
+class="status"
+id="status">
+
+Tekan Mulai Kamera.
+Setelah aktif, sistem langsung mendeteksi secara otomatis.
+
 </div>
+
 </section>
 
+
+
 <section class="card">
-<h2 class="section-title">📊 Statistik</h2>
+
+<h2 class="section-title">
+📊 Statistik
+</h2>
+
 <div class="stats">
-<div class="stat"><strong id="events">0</strong><span>Kejadian</span></div>
-<div class="stat"><strong id="score">0%</strong><span>Skor Api</span></div>
-<div class="stat"><strong id="last">--:--:--</strong><span>Terakhir</span></div>
+
+<div class="stat">
+
+<strong id="events">
+0
+</strong>
+
+<span>
+Kejadian
+</span>
+
 </div>
+
+
+<div class="stat">
+
+<strong id="score">
+0%
+</strong>
+
+<span>
+Skor Api
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<strong id="last">
+--:--:--
+</strong>
+
+<span>
+Terakhir
+</span>
+
+</div>
+
+</div>
+
 </section>
+
+
 
 <section class="card">
-<h2 class="section-title">📜 Log Aktivitas</h2>
-<div class="log" id="log"></div>
-<div class="tip">
-Deteksi pada demo ini menggunakan analisis warna merah/oranye/kuning dari frame kamera.
-Hasilnya bukan deteksi kebakaran profesional.
+
+<h2 class="section-title">
+📜 Log Aktivitas
+</h2>
+
+<div
+class="log"
+id="log">
 </div>
+
+
+<div class="tip">
+
+Sistem menganalisis karakteristik warna dan
+kecerahan api dari kamera. Hasil ini bukan
+sistem keselamatan kebakaran profesional.
+
+</div>
+
 </section>
 
-<footer>Fire Detector • HTML + CSS + JavaScript</footer>
+
+
+<footer>
+
+<div>
+Fire Detector • HTML + CSS + JavaScript
 </div>
 
-<div class="overlay" id="overlay">
+<div class="powered">
+
+Powered by
+<b>
+Pratama Andika Wiyoga
+</b>
+
+</div>
+
+</footer>
+
+</div>
+
+
+
+<div
+class="overlay"
+id="overlay">
+
 <div class="alert">
-<div class="alert-icon">🚨</div>
-<h2>API TERDETEKSI!</h2>
-<p>Kemungkinan sumber api terdeteksi oleh kamera.</p>
+
+<div class="alert-icon">
+🚨
+</div>
+
+<h2>
+KOREK API TERDETEKSI!
+</h2>
+
+<p>
+Kemungkinan korek api sedang menyala
+di depan kamera.
+</p>
+
+
 <div class="detail">
-<b>Skor Deteksi:</b> <span id="alertScore">0%</span><br>
-<b>Waktu:</b> <span id="alertTime">--</span>
+
+<b>
+Skor:
+</b>
+
+<span id="alertScore">
+0%
+</span>
+
+<br>
+
+<b>
+Waktu:
+</b>
+
+<span id="alertTime">
+--
+</span>
+
 </div>
-<button id="close">Tutup Peringatan</button>
+
+
+<button id="close">
+Tutup Peringatan
+</button>
+
 </div>
+
 </div>
+
+
 
 <script>
-const video=document.getElementById("video");
-const placeholder=document.getElementById("placeholder");
-const badge=document.getElementById("badge");
-const startButton=document.getElementById("start");
-const stopButton=document.getElementById("stop");
-const testVoiceButton=document.getElementById("testVoice");
-const statusElement=document.getElementById("status");
-const logElement=document.getElementById("log");
-const eventsElement=document.getElementById("events");
-const scoreElement=document.getElementById("score");
-const lastElement=document.getElementById("last");
-const overlay=document.getElementById("overlay");
-const closeButton=document.getElementById("close");
-const alertScore=document.getElementById("alertScore");
-const alertTime=document.getElementById("alertTime");
 
-let stream=null;
-let detectionTimer=null;
-let eventCount=0;
-let lastAlert=0;
-let audioContext=null;
+const video =
+document.getElementById("video");
+
+const placeholder =
+document.getElementById("placeholder");
+
+const badge =
+document.getElementById("badge");
+
+const startButton =
+document.getElementById("start");
+
+const stopButton =
+document.getElementById("stop");
+
+const testVoiceButton =
+document.getElementById("testVoice");
+
+const statusElement =
+document.getElementById("status");
+
+const logElement =
+document.getElementById("log");
+
+const eventsElement =
+document.getElementById("events");
+
+const scoreElement =
+document.getElementById("score");
+
+const lastElement =
+document.getElementById("last");
+
+const overlay =
+document.getElementById("overlay");
+
+const closeButton =
+document.getElementById("close");
+
+const alertScore =
+document.getElementById("alertScore");
+
+const alertTime =
+document.getElementById("alertTime");
+
+const detectionFrame =
+document.getElementById("detectionFrame");
+
+
+let stream = null;
+
+let detectionTimer = null;
+
+let eventCount = 0;
+
+let lastAlert = 0;
+
+let audioContext = null;
+
+let fireFrames = 0;
+
+let normalFrames = 0;
+
+let currentlyDetected = false;
+
+
 
 function now(){
-return new Date().toLocaleTimeString("id-ID",{hour12:false});
+
+return new Date().toLocaleTimeString(
+"id-ID",
+{
+hour12:false
 }
+);
+
+}
+
+
 
 function log(message,type="white"){
-const el=document.createElement("div");
-el.className="log-item "+type;
-el.textContent="["+now()+"] "+message;
-logElement.prepend(el);
+
+const item =
+document.createElement("div");
+
+item.className =
+"log-item " + type;
+
+item.textContent =
+"[" + now() + "] " + message;
+
+logElement.prepend(item);
+
 }
 
-function cameraStatus(on){
-badge.textContent=on?"● ONLINE":"● OFFLINE";
-badge.className="badge "+(on?"online":"offline");
+
+
+function cameraStatus(active){
+
+badge.textContent =
+active ? "● ONLINE" : "● OFFLINE";
+
+badge.className =
+"badge " +
+(active ? "online" : "offline");
+
 }
+
+
 
 function speak(text){
-if(!("speechSynthesis" in window)){
-log("Browser tidak mendukung suara.","red");
+
+if(
+!("speechSynthesis" in window)
+){
+
 return;
+
 }
+
 
 window.speechSynthesis.cancel();
 
-const utterance=new SpeechSynthesisUtterance(text);
-utterance.lang="id-ID";
-utterance.rate=.88;
-utterance.pitch=1;
-utterance.volume=1;
 
-const voices=window.speechSynthesis.getVoices();
-const voice=voices.find(v=>v.lang && v.lang.toLowerCase().startsWith("id"));
+const speech =
+new SpeechSynthesisUtterance(text);
 
-if(voice) utterance.voice=voice;
 
-window.speechSynthesis.speak(utterance);
+speech.lang =
+"id-ID";
+
+speech.rate =
+0.9;
+
+speech.pitch =
+1;
+
+speech.volume =
+1;
+
+
+const voices =
+window.speechSynthesis.getVoices();
+
+
+const indonesia =
+voices.find(
+voice =>
+voice.lang &&
+voice.lang
+.toLowerCase()
+.startsWith("id")
+);
+
+
+if(indonesia){
+
+speech.voice =
+indonesia;
+
 }
 
-function alarm(){
+
+window.speechSynthesis.speak(
+speech
+);
+
+}
+
+
+
+function makeAlarm(){
+
 try{
+
 if(!audioContext){
-audioContext=new(window.AudioContext||window.webkitAudioContext)();
+
+audioContext =
+new(
+window.AudioContext ||
+window.webkitAudioContext
+)();
+
 }
 
-if(audioContext.state==="suspended") audioContext.resume();
 
-const oscillator=audioContext.createOscillator();
-const gain=audioContext.createGain();
+if(
+audioContext.state ===
+"suspended"
+){
 
-oscillator.type="square";
-oscillator.frequency.value=850;
-gain.gain.value=.06;
+audioContext.resume();
+
+}
+
+
+const oscillator =
+audioContext.createOscillator();
+
+const gain =
+audioContext.createGain();
+
+
+oscillator.type =
+"square";
+
+oscillator.frequency.value =
+900;
+
+gain.gain.value =
+0.08;
+
 
 oscillator.connect(gain);
-gain.connect(audioContext.destination);
+
+gain.connect(
+audioContext.destination
+);
+
 
 oscillator.start();
 
-setTimeout(()=>oscillator.stop(),1200);
 
-}catch(e){}
+setTimeout(
+()=>{
+oscillator.stop();
+},
+1200
+);
+
+
+}catch(error){
+
+console.log(error);
+
 }
 
-function fireAlert(score){
-const current=Date.now();
+}
 
-if(current-lastAlert<8000) return;
 
-lastAlert=current;
+
+function triggerFire(score){
+
+const current =
+Date.now();
+
+
+/*
+Jangan ulangi suara/popup
+terlalu sering.
+*/
+
+if(
+currentlyDetected
+){
+
+return;
+
+}
+
+
+if(
+current - lastAlert <
+6000
+){
+
+return;
+
+}
+
+
+lastAlert =
+current;
+
+currentlyDetected =
+true;
+
+
 eventCount++;
 
-eventsElement.textContent=eventCount;
-scoreElement.textContent=score+"%";
-lastElement.textContent=now();
+eventsElement.textContent =
+eventCount;
 
-alertScore.textContent=score+"%";
-alertTime.textContent=new Date().toLocaleString("id-ID");
+lastElement.textContent =
+now();
 
-overlay.classList.add("show");
 
-log("🚨 API TERDETEKSI! Skor: "+score+"%","red");
+scoreElement.textContent =
+score + "%";
 
-alarm();
 
-speak("Peringatan. Api terdeteksi. Segera periksa area sekitar.");
+alertScore.textContent =
+score + "%";
+
+
+alertTime.textContent =
+new Date().toLocaleString(
+"id-ID"
+);
+
+
+overlay.classList.add(
+"show"
+);
+
+
+statusElement.textContent =
+"🚨 BAHAYA! KOREK API TERDETEKSI MENYALA!";
+
+statusElement.classList.add(
+"danger"
+);
+
+
+detectionFrame.classList.add(
+"fire"
+);
+
+
+log(
+"🚨 KOREK API TERDETEKSI! Skor: " +
+score + "%",
+"red"
+);
+
+
+/*
+Alarm + suara otomatis.
+*/
+
+makeAlarm();
+
+
+speak(
+"Peringatan. Korek api terdeteksi menyala di depan kamera."
+);
+
 }
 
-function calculateFireScore(){
-if(video.readyState<2 || !video.videoWidth || !video.videoHeight) return 0;
 
-const canvas=document.createElement("canvas");
-const width=90;
-const height=Math.max(50,Math.round(width*video.videoHeight/video.videoWidth));
 
-canvas.width=width;
-canvas.height=height;
+function getFireScore(){
 
-const ctx=canvas.getContext("2d",{willReadFrequently:true});
+if(
+video.readyState < 2 ||
+!video.videoWidth ||
+!video.videoHeight
+){
 
-ctx.drawImage(video,0,0,width,height);
+return 0;
 
-const pixels=ctx.getImageData(0,0,width,height).data;
-
-let hot=0;
-let total=0;
-
-for(let i=0;i<pixels.length;i+=16){
-const r=pixels[i];
-const g=pixels[i+1];
-const b=pixels[i+2];
-
-const fire=
-r>145 &&
-r>g*1.15 &&
-g>b*1.10 &&
-(r+g+b)>390;
-
-if(fire) hot++;
-total++;
 }
 
-return Math.min(100,Math.round((hot/Math.max(total,1))*100));
+
+const canvas =
+document.createElement("canvas");
+
+
+const width =
+120;
+
+
+const height =
+Math.round(
+video.videoHeight /
+video.videoWidth *
+width
+);
+
+
+canvas.width =
+width;
+
+canvas.height =
+height;
+
+
+const context =
+canvas.getContext(
+"2d",
+{
+willReadFrequently:true
 }
+);
+
+
+context.drawImage(
+video,
+0,
+0,
+width,
+height
+);
+
+
+const image =
+context.getImageData(
+0,
+0,
+width,
+height
+);
+
+
+const data =
+image.data;
+
+
+let firePixels =
+0;
+
+let brightPixels =
+0;
+
+let totalPixels =
+0;
+
+
+for(
+let i=0;
+i<data.length;
+i+=4
+){
+
+const r =
+data[i];
+
+const g =
+data[i+1];
+
+const b =
+data[i+2];
+
+
+const brightness =
+(r+g+b)/3;
+
+
+/*
+Karakteristik warna api.
+*/
+
+const orange =
+r > 135 &&
+g > 55 &&
+g < 235 &&
+b < 140 &&
+r > g*1.08;
+
+
+const yellow =
+r > 165 &&
+g > 105 &&
+b < 120 &&
+r > b*1.4;
+
+
+const red =
+r > 170 &&
+g < 130 &&
+r > g*1.35 &&
+b < 110;
+
+
+if(
+orange ||
+yellow ||
+red
+){
+
+firePixels++;
+
+}
+
+
+if(
+r > 200 &&
+g > 100 &&
+b < 160 &&
+brightness > 145
+){
+
+brightPixels++;
+
+}
+
+
+totalPixels++;
+
+}
+
+
+const colorRatio =
+firePixels /
+Math.max(
+totalPixels,
+1
+);
+
+
+const brightRatio =
+brightPixels /
+Math.max(
+totalPixels,
+1
+);
+
+
+/*
+Skor gabungan.
+*/
+
+let score =
+(
+colorRatio * 100 * .75
+)
++
+(
+brightRatio * 100 * .25
+);
+
+
+score =
+Math.max(
+0,
+Math.min(
+100,
+score
+)
+);
+
+
+return Math.round(score);
+
+}
+
+
 
 function detectFire(){
-const score=calculateFireScore();
 
-scoreElement.textContent=score+"%";
+const score =
+getFireScore();
 
-if(score>=18){
-fireAlert(score);
+
+scoreElement.textContent =
+score + "%";
+
+
+/*
+Api korek bisa kecil.
+
+Kita tidak langsung memicu
+peringatan dari satu frame.
+
+Harus muncul beberapa frame
+berturut-turut.
+*/
+
+if(
+score >= 5
+){
+
+fireFrames++;
+
+normalFrames = 0;
+
+}else{
+
+normalFrames++;
+
+fireFrames = 0;
+
 }
+
+
+/*
+Jika api terlihat minimal
+2 kali pemeriksaan berturut-turut,
+trigger peringatan.
+*/
+
+if(
+fireFrames >= 2
+){
+
+triggerFire(score);
+
 }
+
+
+/*
+Jika api sudah tidak terlihat,
+kembali ke mode normal.
+*/
+
+if(
+normalFrames >= 5
+){
+
+currentlyDetected =
+false;
+
+statusElement.classList.remove(
+"danger"
+);
+
+detectionFrame.classList.remove(
+"fire"
+);
+
+if(stream){
+
+statusElement.textContent =
+"🔍 Memindai... Tidak ada korek api menyala.";
+
+}
+
+}
+
+}
+
+
 
 async function startCamera(){
 
-if(!window.isSecureContext &&
-location.hostname!=="localhost" &&
-location.hostname!=="127.0.0.1"){
+try{
 
-statusElement.textContent=
-"Kamera membutuhkan HTTPS. Upload website ke hosting dengan SSL/HTTPS.";
+if(
+!navigator.mediaDevices ||
+!navigator.mediaDevices.getUserMedia
+){
 
-log("❌ Halaman tidak menggunakan HTTPS.","red");
+alert(
+"Browser tidak mendukung kamera."
+);
+
 return;
+
 }
 
-if(!navigator.mediaDevices ||
-!navigator.mediaDevices.getUserMedia){
 
-statusElement.textContent=
-"Browser tidak mendukung akses kamera.";
-
-log("❌ getUserMedia tidak tersedia.","red");
-return;
-}
+/*
+Buka audio dari interaksi
+tombol user.
+*/
 
 try{
 
-statusElement.textContent="Meminta izin kamera...";
-log("Meminta akses kamera...");
+audioContext =
+new(
+window.AudioContext ||
+window.webkitAudioContext
+)();
 
-if(!audioContext){
-try{
-audioContext=new(window.AudioContext||window.webkitAudioContext)();
+await audioContext.resume();
+
 }catch(e){}
-}
 
-stream=await navigator.mediaDevices.getUserMedia({
+
+/*
+Gunakan kamera belakang.
+*/
+
+stream =
+await navigator.mediaDevices.getUserMedia({
+
 video:{
-facingMode:{ideal:"user"},
-width:{ideal:1280},
-height:{ideal:720}
+facingMode:{
+ideal:"environment"
 },
+width:{
+ideal:1920
+},
+height:{
+ideal:1080
+}
+},
+
 audio:false
+
 });
 
-video.srcObject=stream;
+
+video.srcObject =
+stream;
+
 
 await video.play();
 
-placeholder.style.display="none";
 
-startButton.disabled=true;
-stopButton.disabled=false;
+placeholder.style.display =
+"none";
+
+
+startButton.disabled =
+true;
+
+stopButton.disabled =
+false;
+
 
 cameraStatus(true);
 
-statusElement.textContent=
-"✅ Kamera aktif. Deteksi api otomatis berjalan.";
 
-log("✅ Kamera berhasil aktif.","green");
+statusElement.textContent =
+"✅ Kamera aktif. Mendeteksi korek api secara otomatis.";
 
-clearInterval(detectionTimer);
+
+log(
+"✅ Kamera aktif.",
+"green"
+);
+
+
+fireFrames = 0;
+
+normalFrames = 0;
+
+currentlyDetected = false;
+
 
 /*
-   DETEKSI OTOMATIS
-   Tidak perlu menekan tombol lain.
+Suara awal.
 */
-detectionTimer=setInterval(detectFire,1000);
+
+setTimeout(
+()=>{
+
+speak(
+"Kamera aktif. Sistem deteksi korek api berjalan otomatis."
+);
+
+},
+300
+);
+
+
+/*
+Deteksi otomatis setiap 600ms.
+*/
+
+clearInterval(
+detectionTimer
+);
+
+
+detectionTimer =
+setInterval(
+detectFire,
+600
+);
 
 }catch(error){
 
 console.error(error);
 
-let message="Kamera gagal diakses.";
 
-if(error.name==="NotAllowedError"){
-message="Izin kamera ditolak. Izinkan kamera untuk website ini.";
-}else if(error.name==="NotFoundError"){
-message="Kamera tidak ditemukan.";
-}else if(error.name==="NotReadableError"){
-message="Kamera sedang digunakan aplikasi lain.";
-}else if(error.name==="SecurityError"){
-message="Akses kamera diblokir browser.";
+log(
+"❌ Kamera gagal diakses: " +
+error.name,
+"red"
+);
+
+
+statusElement.textContent =
+"❌ Kamera gagal diakses. Pastikan izin kamera diberikan.";
+
 }
 
-statusElement.textContent=message;
-log("❌ "+message,"red");
 }
-}
+
+
 
 function stopCamera(){
 
-clearInterval(detectionTimer);
-detectionTimer=null;
+clearInterval(
+detectionTimer
+);
+
+detectionTimer =
+null;
+
 
 if(stream){
-stream.getTracks().forEach(track=>track.stop());
+
+stream
+.getTracks()
+.forEach(
+track =>
+track.stop()
+);
+
 }
 
-stream=null;
-video.srcObject=null;
 
-placeholder.style.display="grid";
+stream =
+null;
 
-startButton.disabled=false;
-stopButton.disabled=true;
+
+video.srcObject =
+null;
+
+
+placeholder.style.display =
+"grid";
+
+
+startButton.disabled =
+false;
+
+stopButton.disabled =
+true;
+
 
 cameraStatus(false);
 
-scoreElement.textContent="0%";
 
-statusElement.textContent="Kamera dimatikan.";
+scoreElement.textContent =
+"0%";
 
-log("Kamera dimatikan.");
+
+fireFrames = 0;
+
+normalFrames = 0;
+
+currentlyDetected = false;
+
+
+statusElement.textContent =
+"Kamera dimatikan.";
+
+statusElement.classList.remove(
+"danger"
+);
+
+
+detectionFrame.classList.remove(
+"fire"
+);
+
+
+log(
+"Kamera dimatikan."
+);
+
 }
+
+
 
 function testVoice(){
-speak("Halo. Sistem detektor api siap digunakan.");
-log("🔊 Tes suara dijalankan.","green");
+
+speak(
+"Peringatan. Korek api terdeteksi menyala di depan kamera."
+);
+
+
+log(
+"🔊 Tes suara dijalankan.",
+"green"
+);
+
 }
 
-startButton.addEventListener("click",startCamera);
-stopButton.addEventListener("click",stopCamera);
-testVoiceButton.addEventListener("click",testVoice);
 
-closeButton.addEventListener("click",()=>{
-overlay.classList.remove("show");
-});
 
-if("speechSynthesis" in window){
-window.speechSynthesis.onvoiceschanged=()=>{
-window.speechSynthesis.getVoices();
+startButton.addEventListener(
+"click",
+startCamera
+);
+
+
+stopButton.addEventListener(
+"click",
+stopCamera
+);
+
+
+testVoiceButton.addEventListener(
+"click",
+testVoice
+);
+
+
+closeButton.addEventListener(
+"click",
+()=>{
+
+overlay.classList.remove(
+"show"
+);
+
+}
+);
+
+
+if(
+"speechSynthesis" in window
+){
+
+window.speechSynthesis
+.onvoiceschanged =
+()=>{
+
+window.speechSynthesis
+.getVoices();
+
 };
+
 }
+
 
 cameraStatus(false);
 
-log("Aplikasi siap.");
-log("Tekan Mulai Kamera untuk memulai.");
+
+log(
+"Aplikasi siap."
+);
+
 
 </script>
+
 </body>
 </html>
