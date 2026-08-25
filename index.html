@@ -86,11 +86,6 @@ background:#02060b;
 transform:scaleX(-1);
 }
 
-/*
-Kamera depan = mirror.
-Kamera belakang = normal.
-*/
-
 video.rear{
 transform:scaleX(1);
 }
@@ -141,7 +136,8 @@ width:86%;
 height:80%;
 border:2px solid rgba(255,255,255,.15);
 border-radius:18px;
-pointer-events:none
+pointer-events:none;
+transition:.25s
 }
 
 .detection-frame.danger{
@@ -227,7 +223,8 @@ background:#091222;
 border:1px solid #1e2c43;
 color:#b9c5d6;
 font-size:13px;
-line-height:1.5
+line-height:1.5;
+transition:.25s
 }
 
 .status.danger{
@@ -235,6 +232,12 @@ background:#641c1c;
 border-color:#ff3838;
 color:#fff;
 animation:danger .6s infinite alternate
+}
+
+.status.safe{
+background:#0b2b1b;
+border-color:#208b55;
+color:#70f0a0
 }
 
 @keyframes danger{
@@ -413,11 +416,11 @@ font-size:12px
 <header class="header">
 
 <h1 class="title">
-🔥 Detektor Api
+🔥 Detektor Api Kamera HP
 </h1>
 
 <div class="subtitle">
-Kamera aktif = deteksi otomatis berjalan.
+Kamera aktif = deteksi api otomatis berjalan.
 </div>
 
 </header>
@@ -440,13 +443,9 @@ id="placeholder">
 
 <div>
 
-<div class="icon">
-📷
-</div>
+<div class="icon">📷</div>
 
-<b>
-Kamera belum aktif
-</b>
+<b>Kamera belum aktif</b>
 
 <br>
 
@@ -527,7 +526,8 @@ class="status"
 id="status">
 
 Tekan Mulai Kamera.
-Setelah kamera aktif, deteksi dan suara berjalan otomatis.
+Setelah kamera aktif, deteksi api dan suara
+berjalan otomatis.
 
 </div>
 
@@ -543,18 +543,41 @@ Setelah kamera aktif, deteksi dan suara berjalan otomatis.
 <div class="stats">
 
 <div class="stat">
-<strong id="events">0</strong>
-<span>Kejadian</span>
+
+<strong id="events">
+0
+</strong>
+
+<span>
+Kejadian
+</span>
+
 </div>
 
-<div class="stat">
-<strong id="score">0%</strong>
-<span>Skor Deteksi</span>
-</div>
 
 <div class="stat">
-<strong id="last">--:--:--</strong>
-<span>Terakhir</span>
+
+<strong id="score">
+0%
+</strong>
+
+<span>
+Skor Api
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<strong id="last">
+--:--:--
+</strong>
+
+<span>
+Terakhir
+</span>
+
 </div>
 
 </div>
@@ -575,9 +598,10 @@ id="log">
 
 <div class="tip">
 
-Sistem menggunakan analisis warna dan
-kecerahan untuk mencari indikasi api, Hasilnya bukan alat keselamatan
-kebakaran profesional.
+Sistem menggunakan analisis warna, kecerahan,
+dan perubahan cahaya untuk mencari indikasi
+api. Hasilnya bukan alat keselamatan kebakaran
+profesional.
 
 </div>
 
@@ -587,7 +611,7 @@ kebakaran profesional.
 <footer>
 
 <div>
-Fire
+Fire Detector • HTML + CSS + JavaScript
 </div>
 
 <div class="powered">
@@ -619,8 +643,8 @@ API TERDETEKSI!
 </h2>
 
 <p>
-Kemungkinan sumber api
-terdeteksi oleh kamera.
+Kemungkinan sumber api terdeteksi
+oleh kamera.
 </p>
 
 <div class="detail">
@@ -655,6 +679,10 @@ Tutup Peringatan
 
 
 <script>
+
+/* =========================
+   ELEMENT
+========================= */
 
 const video =
 document.getElementById("video");
@@ -711,7 +739,12 @@ const detectionFrame =
 document.getElementById("detectionFrame");
 
 
+/* =========================
+   VARIABLES
+========================= */
+
 let stream = null;
+
 let detectionTimer = null;
 
 let currentCamera = "user";
@@ -719,34 +752,32 @@ let currentCamera = "user";
 let torchOn = false;
 
 let eventCount = 0;
+
 let lastAlert = 0;
 
-let currentlyDetected = false;
-
-let detectionFrames = 0;
-let normalFrames = 0;
-
 let audioEnabled = false;
+
 let audioContext = null;
 
 
-/* =========================
-   MIRROR KAMERA
-========================= */
+/*
+Status deteksi
+*/
 
-function updateCameraMirror(){
+let fireDetected = false;
 
-if(currentCamera === "user"){
+let detectionFrames = 0;
 
-video.classList.remove("rear");
+let normalFrames = 0;
 
-}else{
 
-video.classList.add("rear");
+/*
+Supaya suara "api sudah padam"
+hanya keluar setelah sebelumnya
+memang ada api.
+*/
 
-}
-
-}
+let extinguishAnnounced = false;
 
 
 /* =========================
@@ -769,7 +800,10 @@ hour12:false
    LOG
 ========================= */
 
-function log(message,type="white"){
+function log(
+message,
+type="white"
+){
 
 const item =
 document.createElement("div");
@@ -786,7 +820,26 @@ logElement.prepend(item);
 
 
 /* =========================
-   STATUS
+   CAMERA MIRROR
+========================= */
+
+function updateCameraMirror(){
+
+if(currentCamera === "user"){
+
+video.classList.remove("rear");
+
+}else{
+
+video.classList.add("rear");
+
+}
+
+}
+
+
+/* =========================
+   CAMERA STATUS
 ========================= */
 
 function cameraStatus(active){
@@ -798,15 +851,17 @@ active ?
 
 badge.className =
 "badge " +
-(active ?
+(
+active ?
 "online" :
-"offline");
+"offline"
+);
 
 }
 
 
 /* =========================
-   SUARA
+   SPEECH
 ========================= */
 
 function speak(text){
@@ -820,6 +875,11 @@ return;
 if(
 !("speechSynthesis" in window)
 ){
+
+log(
+"Browser tidak mendukung suara.",
+"red"
+);
 
 return;
 
@@ -847,9 +907,10 @@ window.speechSynthesis.getVoices();
 
 const indonesiaVoice =
 voices.find(
-v =>
-v.lang &&
-v.lang.toLowerCase()
+voice =>
+voice.lang &&
+voice.lang
+.toLowerCase()
 .startsWith("id")
 );
 
@@ -868,7 +929,7 @@ utterance
 
 
 /* =========================
-   SUARA ON
+   AKTIFKAN SUARA
 ========================= */
 
 function enableVoice(){
@@ -883,7 +944,7 @@ voiceButton.classList.add(
 );
 
 log(
-"🔊 Suara otomatis aktif.",
+"🔊 Suara aktif.",
 "green"
 );
 
@@ -957,13 +1018,17 @@ oscillator.stop();
 1100
 );
 
-}catch(e){}
+}catch(error){
+
+console.log(error);
+
+}
 
 }
 
 
 /* =========================
-   ALERT
+   API TERDETEKSI
 ========================= */
 
 function fireAlert(score){
@@ -971,33 +1036,75 @@ function fireAlert(score){
 const current =
 Date.now();
 
-if(currentlyDetected){
-return;
-}
+
+/*
+Cooldown supaya tidak
+muncul berkali-kali.
+*/
 
 if(
-current-lastAlert <
+current - lastAlert <
 6000
 ){
+
 return;
+
 }
+
 
 lastAlert =
 current;
 
-currentlyDetected =
-true;
+
+/*
+Kalau api memang sedang
+terdeteksi, jangan tambah
+kejadian lagi.
+*/
+
+if(fireDetected){
+
+return;
+
+}
+
+
+fireDetected = true;
+
+extinguishAnnounced = false;
+
+normalFrames = 0;
 
 eventCount++;
+
+
+/*
+STATISTIK KEJADIAN
+*/
 
 eventsElement.textContent =
 eventCount;
 
-lastElement.textContent =
-now();
+
+/*
+STATISTIK SKOR
+*/
 
 scoreElement.textContent =
 score + "%";
+
+
+/*
+STATISTIK WAKTU
+*/
+
+lastElement.textContent =
+now();
+
+
+/*
+POPUP
+*/
 
 alertScore.textContent =
 score + "%";
@@ -1011,9 +1118,17 @@ overlay.classList.add(
 "show"
 );
 
+
+/*
+STATUS
+*/
+
 statusElement.textContent =
-"🚨 API TERDETEKSI!! 
-cepat padamkan apinya sebelum kebakaran";
+"🚨 API TERDETEKSI! Kemungkinan sumber api terdeteksi oleh kamera.";
+
+statusElement.classList.remove(
+"safe"
+);
 
 statusElement.classList.add(
 "danger"
@@ -1023,26 +1138,106 @@ detectionFrame.classList.add(
 "danger"
 );
 
+
+/*
+LOG
+*/
+
 log(
-"🚨 API TERDETEKSI! Skor: "+
-score+"%",
+"🚨 API TERDETEKSI! Skor: " +
+score + "%",
 "red"
 );
 
+
+/*
+ALARM
+*/
+
 alarm();
 
+
+/*
+SUARA
+*/
+
 speak(
-"peringatan api terdeteksi di depan kamera"
+"Peringatan. Api terdeteksi di depan kamera."
 );
 
 }
 
 
 /* =========================
-   ANALISIS
+   API SUDAH PADAM
 ========================= */
 
-function calculateDetection(){
+function fireExtinguished(){
+
+if(!fireDetected){
+
+return;
+
+}
+
+if(extinguishAnnounced){
+
+return;
+
+}
+
+
+extinguishAnnounced = true;
+
+fireDetected = false;
+
+
+/*
+Kembalikan tampilan.
+*/
+
+statusElement.classList.remove(
+"danger"
+);
+
+statusElement.classList.add(
+"safe"
+);
+
+detectionFrame.classList.remove(
+"danger"
+);
+
+statusElement.textContent =
+"✅ Api sudah padam. Sistem kembali memantau.";
+
+
+/*
+LOG
+*/
+
+log(
+"✅ Api sudah padam. Tidak ada api terdeteksi.",
+"green"
+);
+
+
+/*
+SUARA OTOMATIS
+*/
+
+speak(
+"Api sudah padam. Sistem kembali memantau."
+);
+
+}
+
+
+/* =========================
+   HITUNG SKOR API
+========================= */
+
+function calculateFireScore(){
 
 if(
 video.readyState < 2 ||
@@ -1053,6 +1248,7 @@ video.readyState < 2 ||
 return 0;
 
 }
+
 
 const canvas =
 document.createElement("canvas");
@@ -1075,6 +1271,7 @@ width;
 canvas.height =
 height;
 
+
 const ctx =
 canvas.getContext(
 "2d",
@@ -1082,6 +1279,7 @@ canvas.getContext(
 willReadFrequently:true
 }
 );
+
 
 ctx.drawImage(
 video,
@@ -1091,6 +1289,7 @@ width,
 height
 );
 
+
 const pixels =
 ctx.getImageData(
 0,
@@ -1099,9 +1298,13 @@ width,
 height
 ).data;
 
-let warm = 0;
-let hot = 0;
-let ember = 0;
+
+let warmPixels = 0;
+
+let hotPixels = 0;
+
+let emberPixels = 0;
+
 let total = 0;
 
 
@@ -1124,36 +1327,56 @@ const brightness =
 (r+g+b)/3;
 
 
+/*
+ORANYE
+*/
+
 const orange =
 r > 125 &&
 g > 45 &&
 g < 220 &&
 b < 145 &&
-r > g*1.08;
+r > g * 1.08;
 
+
+/*
+KUNING
+*/
 
 const yellow =
 r > 160 &&
 g > 90 &&
 b < 130 &&
-r > b*1.35;
+r > b * 1.35;
 
+
+/*
+MERAH
+*/
 
 const red =
 r > 155 &&
 g < 145 &&
 b < 120 &&
-r > g*1.25;
+r > g * 1.25;
 
 
-const hotPoint =
+/*
+CAHAYA API TERANG
+*/
+
+const hot =
 r > 190 &&
 g > 65 &&
 b < 150 &&
-brightness > 145;
+brightness > 125;
 
 
-const emberPoint =
+/*
+TITIK MERAH TERANG
+*/
+
+const ember =
 r > 185 &&
 g < 115 &&
 b < 90;
@@ -1164,15 +1387,23 @@ orange ||
 yellow ||
 red
 ){
-warm++;
+
+warmPixels++;
+
 }
 
-if(hotPoint){
-hot++;
+
+if(hot){
+
+hotPixels++;
+
 }
 
-if(emberPoint){
-ember++;
+
+if(ember){
+
+emberPixels++;
+
 }
 
 total++;
@@ -1181,74 +1412,137 @@ total++;
 
 
 const warmRatio =
-warm/Math.max(total,1);
+warmPixels /
+Math.max(total,1);
 
 const hotRatio =
-hot/Math.max(total,1);
+hotPixels /
+Math.max(total,1);
 
 const emberRatio =
-ember/Math.max(total,1);
+emberPixels /
+Math.max(total,1);
 
+
+/*
+Gabungan skor.
+*/
 
 let score =
-warmRatio*100*.50 +
-hotRatio*100*.20 +
-emberRatio*100*.30;
+warmRatio * 100 * 0.50 +
+hotRatio * 100 * 0.20 +
+emberRatio * 100 * 0.30;
 
 
-return Math.round(
+score =
 Math.max(
 0,
 Math.min(
 100,
 score
 )
-)
 );
+
+
+return Math.round(score);
 
 }
 
 
 /* =========================
-   DETEKSI
+   DETEKSI OTOMATIS
 ========================= */
 
 function detectFire(){
 
-const score =
-calculateDetection();
+if(!stream){
 
-scoreElement.textContent =
-score+"%";
-
-
-if(score >= 4){
-
-detectionFrames++;
-normalFrames=0;
-
-}else{
-
-normalFrames++;
-detectionFrames=0;
+return;
 
 }
 
 
+const score =
+calculateFireScore();
+
+
+/*
+UPDATE STATISTIK SKOR
+*/
+
+scoreElement.textContent =
+score + "%";
+
+
+/*
+DETEKSI BERTAHAP
+
+3 frame berturut-turut
+supaya tidak gampang false alarm.
+*/
+
+if(score >= 4){
+
+detectionFrames++;
+
+normalFrames = 0;
+
+}else{
+
+normalFrames++;
+
+detectionFrames = 0;
+
+}
+
+
+/*
+API TERDETEKSI
+*/
+
 if(
+!fireDetected &&
 detectionFrames >= 3
 ){
 
 fireAlert(score);
 
+return;
+
 }
 
 
+/*
+API SUDAH TIDAK TERDETEKSI
+
+Butuh beberapa frame normal
+supaya tidak langsung mengatakan
+api padam karena satu frame gelap.
+*/
+
 if(
-normalFrames >= 7
+fireDetected &&
+normalFrames >= 8
 ){
 
-currentlyDetected=false;
+fireExtinguished();
+
+}
+
+
+/*
+Kalau normal dan belum pernah
+terdeteksi api.
+*/
+
+if(
+!fireDetected &&
+normalFrames >= 5
+){
+
+statusElement.classList.remove(
+"safe"
+);
 
 statusElement.classList.remove(
 "danger"
@@ -1258,12 +1552,8 @@ detectionFrame.classList.remove(
 "danger"
 );
 
-if(stream){
-
 statusElement.textContent =
-"🔍 Memindai api secara otomatis.";
-
-}
+"🔍 Memantau api secara otomatis.";
 
 }
 
@@ -1285,8 +1575,17 @@ return;
 
 }
 
+
 const track =
 stream.getVideoTracks()[0];
+
+
+if(!track){
+
+return;
+
+}
+
 
 const capabilities =
 track.getCapabilities ?
@@ -1308,10 +1607,12 @@ return;
 
 }
 
+
 try{
 
 torchOn =
 !torchOn;
+
 
 await track.applyConstraints({
 
@@ -1323,17 +1624,38 @@ torch:torchOn
 
 });
 
+
 flashButton.textContent =
 torchOn ?
 "🔦 Matikan Flash" :
 "🔦 Nyalakan Flash";
 
-}catch(e){
+
+statusElement.textContent =
+torchOn ?
+"🔦 Flash menyala." :
+"🔦 Flash dimatikan.";
+
+
+log(
+torchOn ?
+"🔦 Flash dinyalakan." :
+"🔦 Flash dimatikan.",
+"green"
+);
+
+
+}catch(error){
+
+console.error(error);
 
 log(
 "❌ Flash tidak dapat dikontrol.",
 "red"
 );
+
+statusElement.textContent =
+"❌ Flash tidak dapat dikontrol pada perangkat/browser ini.";
 
 }
 
@@ -1341,7 +1663,7 @@ log(
 
 
 /* =========================
-   START
+   MULAI KAMERA
 ========================= */
 
 async function startCamera(){
@@ -1362,11 +1684,11 @@ return;
 
 
 /*
-Audio langsung aktif karena
-tombol kamera ditekan.
+Audio langsung diaktifkan
+setelah user menekan tombol.
 */
 
-audioEnabled=true;
+audioEnabled = true;
 
 voiceButton.textContent =
 "🔊 Suara Aktif";
@@ -1378,16 +1700,41 @@ voiceButton.classList.add(
 
 try{
 
+if(!audioContext){
+
 audioContext =
 new(
 window.AudioContext ||
 window.webkitAudioContext
 )();
 
+}
+
 await audioContext.resume();
 
-}catch(e){}
+}catch(error){
 
+console.log(error);
+
+}
+
+
+/*
+Reset state.
+*/
+
+fireDetected = false;
+
+detectionFrames = 0;
+
+normalFrames = 0;
+
+extinguishAnnounced = false;
+
+
+/*
+KAMERA
+*/
 
 stream =
 await navigator.mediaDevices.getUserMedia({
@@ -1420,8 +1767,7 @@ await video.play();
 
 
 /*
-FIX KAMERA DEPAN:
-mirror hanya kamera depan.
+FIX MIRROR
 */
 
 updateCameraMirror();
@@ -1430,32 +1776,46 @@ updateCameraMirror();
 placeholder.style.display =
 "none";
 
-startButton.disabled=true;
+startButton.disabled =
+true;
 
-stopButton.disabled=false;
+stopButton.disabled =
+false;
 
 cameraStatus(true);
 
-torchOn=false;
+torchOn = false;
 
-fireFrames=0;
 
-normalFrames=0;
+flashButton.textContent =
+"🔦 Nyalakan Flash";
 
-currentlyDetected=false;
+
+statusElement.classList.remove(
+"danger"
+);
+
+statusElement.classList.remove(
+"safe"
+);
 
 
 statusElement.textContent =
-"✅ Kamera aktif. Deteksi otomatis berjalan.";
+"✅ Kamera aktif. Deteksi api berjalan otomatis.";
+
 
 log(
 "✅ Kamera berhasil aktif.",
 "green"
 );
 
+
 log(
-currentCamera==="user" ?
-"📷 Kamera depan aktif dan mirror." :
+currentCamera === "user" ?
+"📷 Kamera depan aktif.",
+"green"
+) :
+log(
 "📷 Kamera belakang aktif.",
 "green"
 );
@@ -1469,13 +1829,17 @@ setTimeout(
 ()=>{
 
 speak(
-"Kamera aktif. Sistem deteksi api dan berjalan otomatis."
+"Kamera aktif. Sistem deteksi api berjalan otomatis."
 );
 
 },
 350
 );
 
+
+/*
+DETEKSI SETIAP 600ms
+*/
 
 clearInterval(
 detectionTimer
@@ -1487,18 +1851,19 @@ detectFire,
 600
 );
 
+
 }catch(error){
 
 console.error(error);
 
 log(
-"❌ Kamera gagal diakses: "+
+"❌ Kamera gagal diakses: " +
 error.name,
 "red"
 );
 
 statusElement.textContent =
-"❌ Kamera gagal diakses. Izinkan akses kamera.";
+"❌ Kamera gagal diakses. Izinkan akses kamera untuk website ini.";
 
 }
 
@@ -1506,13 +1871,17 @@ statusElement.textContent =
 
 
 /* =========================
-   SWITCH CAMERA
+   UBAH KAMERA
 ========================= */
 
 async function switchCamera(){
 
+const previousCamera =
+currentCamera;
+
+
 currentCamera =
-currentCamera==="user" ?
+currentCamera === "user" ?
 "environment" :
 "user";
 
@@ -1532,6 +1901,7 @@ track.stop()
 clearInterval(
 detectionTimer
 );
+
 
 try{
 
@@ -1566,39 +1936,57 @@ await video.play();
 
 
 /*
-FIX:
-depan = mirror
-belakang = normal
+Mirror otomatis.
 */
 
 updateCameraMirror();
 
 
-torchOn=false;
+torchOn = false;
 
 flashButton.textContent =
 "🔦 Nyalakan Flash";
 
 
-log(
-"🔄 Kamera diganti ke "+
-(
-currentCamera==="user" ?
-"Kamera Depan" :
-"Kamera Belakang"
-),
-"green"
+/*
+Reset deteksi saat ganti kamera.
+*/
+
+fireDetected = false;
+
+detectionFrames = 0;
+
+normalFrames = 0;
+
+extinguishAnnounced = false;
+
+
+statusElement.classList.remove(
+"danger"
+);
+
+statusElement.classList.remove(
+"safe"
+);
+
+detectionFrame.classList.remove(
+"danger"
 );
 
 
 statusElement.textContent =
-"🔄 Kamera "+
+"🔄 Kamera berhasil diubah.";
+
+
+log(
+"🔄 Kamera diubah ke " +
 (
-currentCamera==="user" ?
-"depan" :
-"belakang"
-)+
-" aktif.";
+currentCamera === "user" ?
+"Kamera depan." :
+"Kamera belakang."
+),
+"green"
+);
 
 
 detectionTimer =
@@ -1607,9 +1995,20 @@ detectFire,
 600
 );
 
+
 }catch(error){
 
 console.error(error);
+
+
+/*
+Kembalikan kamera sebelumnya
+kalau kamera baru gagal.
+*/
+
+currentCamera =
+previousCamera;
+
 
 log(
 "❌ Gagal mengganti kamera.",
@@ -1625,7 +2024,7 @@ statusElement.textContent =
 
 
 /* =========================
-   STOP
+   MATIKAN KAMERA
 ========================= */
 
 function stopCamera(){
@@ -1634,7 +2033,7 @@ clearInterval(
 detectionTimer
 );
 
-detectionTimer=null;
+detectionTimer = null;
 
 
 if(stream){
@@ -1648,43 +2047,59 @@ track.stop()
 
 }
 
-stream=null;
 
-video.srcObject=null;
+stream = null;
 
-placeholder.style.display=
+video.srcObject = null;
+
+placeholder.style.display =
 "grid";
 
-startButton.disabled=false;
 
-stopButton.disabled=true;
+startButton.disabled =
+false;
+
+stopButton.disabled =
+true;
 
 cameraStatus(false);
 
-torchOn=false;
 
-flashButton.textContent=
+torchOn = false;
+
+flashButton.textContent =
 "🔦 Nyalakan Flash";
 
-scoreElement.textContent=
+
+scoreElement.textContent =
 "0%";
 
-fireFrames=0;
 
-normalFrames=0;
+fireDetected = false;
 
-currentlyDetected=false;
+detectionFrames = 0;
 
-statusElement.textContent=
-"Kamera dimatikan.";
+normalFrames = 0;
+
+extinguishAnnounced = false;
+
 
 statusElement.classList.remove(
 "danger"
 );
 
+statusElement.classList.remove(
+"safe"
+);
+
 detectionFrame.classList.remove(
 "danger"
 );
+
+
+statusElement.textContent =
+"Kamera dimatikan.";
+
 
 log(
 "Kamera dimatikan."
@@ -1694,7 +2109,23 @@ log(
 
 
 /* =========================
-   EVENT
+   TUTUP PERINGATAN
+========================= */
+
+closeButton.addEventListener(
+"click",
+()=>{
+
+overlay.classList.remove(
+"show"
+);
+
+}
+);
+
+
+/* =========================
+   EVENT BUTTON
 ========================= */
 
 startButton.addEventListener(
@@ -1722,25 +2153,28 @@ voiceButton.addEventListener(
 enableVoice
 );
 
-closeButton.addEventListener(
-"click",
-()=>{
-overlay.classList.remove("show");
-}
-);
 
+/* =========================
+   VOICE LIST
+========================= */
 
 if(
 "speechSynthesis" in window
 ){
 
-window.speechSynthesis.onvoiceschanged=
+window.speechSynthesis.onvoiceschanged =
 ()=>{
+
 window.speechSynthesis.getVoices();
+
 };
 
 }
 
+
+/* =========================
+   INITIAL
+========================= */
 
 cameraStatus(false);
 
