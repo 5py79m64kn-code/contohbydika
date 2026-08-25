@@ -4,394 +4,387 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<title>Fire & Ember Detector</title>
+<title>Fire & Smoke Detector</title>
 
 <style>
 *{
-box-sizing:border-box;
--webkit-tap-highlight-color:transparent
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
 }
 
 html,body{
-margin:0;
-padding:0;
-min-height:100%;
-background:#050b15;
-color:#fff;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background:#050b15;
+    color:#fff;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 }
 
 body{
-display:flex;
-justify-content:center
+    display:flex;
+    justify-content:center;
 }
 
 .app{
-width:100%;
-max-width:760px;
-min-height:100vh;
-background:#07101f;
-overflow:hidden
+    width:100%;
+    max-width:760px;
+    min-height:100vh;
+    background:#07101f;
+    overflow:hidden;
 }
 
 .header{
-padding:26px 20px 22px;
-background:linear-gradient(180deg,#19273d,#101b2d);
-border-bottom:1px solid #30415c
+    padding:25px 20px 21px;
+    background:linear-gradient(180deg,#19273d,#101b2d);
+    border-bottom:1px solid #30415c;
 }
 
 .title{
-margin:0;
-font-size:27px;
-font-weight:800
+    margin:0;
+    font-size:26px;
+    font-weight:800;
 }
 
 .subtitle{
-margin-top:7px;
-color:#9eabc0;
-font-size:14px
+    margin-top:7px;
+    color:#9eabc0;
+    font-size:13px;
 }
 
 .card{
-margin:16px;
-padding:17px;
-border-radius:16px;
-background:linear-gradient(145deg,#16243a,#0e192c);
-border:1px solid #263750;
-box-shadow:0 12px 30px rgba(0,0,0,.2)
+    margin:14px;
+    padding:16px;
+    border-radius:16px;
+    background:linear-gradient(145deg,#16243a,#0e192c);
+    border:1px solid #263750;
+    box-shadow:0 12px 30px rgba(0,0,0,.2);
 }
 
 .section-title{
-margin:0 0 14px;
-font-size:19px;
-font-weight:800
+    margin:0 0 13px;
+    font-size:18px;
 }
 
 .camera{
-position:relative;
-width:100%;
-height:330px;
-overflow:hidden;
-border-radius:14px;
-background:#02060b;
-border:1px solid #2b3a52
+    position:relative;
+    width:100%;
+    height:330px;
+    overflow:hidden;
+    border-radius:14px;
+    background:#02060b;
+    border:1px solid #2b3a52;
 }
 
 video{
-width:100%;
-height:100%;
-object-fit:cover;
-display:block;
-background:#02060b
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    background:#02060b;
 }
 
 .placeholder{
-position:absolute;
-inset:0;
-display:grid;
-place-items:center;
-text-align:center;
-color:#aab6c9;
-background:radial-gradient(circle at center,#17243a 0,#060b14 70%)
+    position:absolute;
+    inset:0;
+    display:grid;
+    place-items:center;
+    text-align:center;
+    color:#aab6c9;
+    background:radial-gradient(
+        circle at center,
+        #17243a 0,
+        #060b14 70%
+    );
 }
 
 .placeholder .icon{
-font-size:48px;
-margin-bottom:8px
+    font-size:48px;
+    margin-bottom:8px;
 }
 
 .badge{
-position:absolute;
-right:12px;
-top:12px;
-padding:8px 12px;
-border-radius:99px;
-background:rgba(5,12,24,.8);
-border:1px solid #33445f;
-font-size:12px;
-font-weight:800;
-z-index:5
+    position:absolute;
+    right:10px;
+    top:10px;
+    padding:7px 11px;
+    border-radius:99px;
+    background:rgba(5,12,24,.85);
+    border:1px solid #33445f;
+    font-size:11px;
+    font-weight:800;
+    z-index:5;
 }
 
 .badge.online{
-color:#5be68f;
-border-color:#1e9d58
+    color:#5be68f;
+    border-color:#1e9d58;
 }
 
 .badge.offline{
-color:#ff8585;
-border-color:#9e3e3e
+    color:#ff8585;
+    border-color:#9e3e3e;
 }
 
 .detection-frame{
-position:absolute;
-left:7%;
-top:10%;
-width:86%;
-height:80%;
-border:2px solid rgba(255,255,255,.15);
-border-radius:18px;
-pointer-events:none;
-transition:.2s
+    position:absolute;
+    left:7%;
+    top:10%;
+    width:86%;
+    height:80%;
+    border:2px solid rgba(255,255,255,.16);
+    border-radius:18px;
+    pointer-events:none;
 }
 
 .detection-frame.danger{
-border-color:#ff3030;
-box-shadow:
-0 0 20px rgba(255,0,0,.8),
-inset 0 0 20px rgba(255,0,0,.3)
+    border-color:#ff3030;
+    box-shadow:
+        0 0 20px rgba(255,0,0,.8),
+        inset 0 0 20px rgba(255,0,0,.3);
 }
 
 .scan{
-position:absolute;
-left:0;
-width:100%;
-height:2px;
-background:#31ff75;
-box-shadow:0 0 12px #31ff75;
-opacity:.6;
-animation:scan 2.5s linear infinite;
-pointer-events:none
+    position:absolute;
+    left:0;
+    width:100%;
+    height:2px;
+    background:#31ff75;
+    box-shadow:0 0 12px #31ff75;
+    opacity:.6;
+    animation:scan 2.5s linear infinite;
+    pointer-events:none;
 }
 
 @keyframes scan{
-0%{top:0}
-50%{top:100%}
-100%{top:0}
+    0%{top:0}
+    50%{top:100%}
+    100%{top:0}
 }
 
 .controls{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-margin-top:13px
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+    margin-top:12px;
 }
 
 button{
-border:0;
-border-radius:12px;
-padding:14px 9px;
-font-size:13px;
-font-weight:800;
-color:#fff;
-background:#2a3951;
-cursor:pointer
+    border:0;
+    border-radius:11px;
+    padding:13px 8px;
+    font-size:13px;
+    font-weight:800;
+    color:#fff;
+    background:#2a3951;
+    cursor:pointer;
 }
 
 button:active{
-transform:scale(.98)
+    transform:scale(.97);
 }
 
-button.primary{
-background:#3184ff
+.primary{
+    background:#3184ff;
 }
 
-button.stop{
-background:#3a4659
+.stop{
+    background:#3a4659;
 }
 
-button.cameraBtn{
-background:#247bce
+.cameraBtn{
+    background:#247bce;
 }
 
-button.flashBtn{
-background:#b88416
+.flashBtn{
+    background:#b88416;
 }
 
-button.voiceBtn{
-background:#7657d9
-}
-
-button.voiceBtn.active{
-background:#208b55
+.voiceBtn{
+    background:#7657d9;
 }
 
 button:disabled{
-opacity:.45
+    opacity:.45;
 }
 
 .status{
-margin-top:12px;
-padding:12px;
-border-radius:10px;
-background:#091222;
-border:1px solid #1e2c43;
-color:#b9c5d6;
-font-size:13px;
-line-height:1.5
+    margin-top:11px;
+    padding:12px;
+    border-radius:10px;
+    background:#091222;
+    border:1px solid #1e2c43;
+    color:#b9c5d6;
+    font-size:12px;
+    line-height:1.5;
 }
 
 .status.danger{
-background:#641c1c;
-border-color:#ff3838;
-color:#fff;
-animation:danger .6s infinite alternate
+    background:#641c1c;
+    border-color:#ff3838;
+    color:#fff;
+    animation:danger .6s infinite alternate;
 }
 
 @keyframes danger{
-from{
-box-shadow:0 0 5px rgba(255,0,0,.3)
-}
-to{
-box-shadow:0 0 25px rgba(255,0,0,.9)
-}
+    from{
+        box-shadow:0 0 5px rgba(255,0,0,.3);
+    }
+    to{
+        box-shadow:0 0 25px rgba(255,0,0,.9);
+    }
 }
 
 .stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:9px
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
 }
 
 .stat{
-padding:16px 7px;
-text-align:center;
-background:#091426;
-border:1px solid #263750;
-border-radius:12px
+    padding:14px 5px;
+    text-align:center;
+    background:#091426;
+    border:1px solid #263750;
+    border-radius:11px;
 }
 
 .stat strong{
-display:block;
-font-size:25px;
-color:#4c92ff;
-margin-bottom:5px
+    display:block;
+    font-size:22px;
+    color:#4c92ff;
+    margin-bottom:4px;
 }
 
 .stat span{
-font-size:11px;
-color:#9daabd
+    font-size:10px;
+    color:#9daabd;
 }
 
 .log{
-max-height:320px;
-overflow:auto;
-background:#071120;
-border:1px solid #1d2b41;
-border-radius:12px
+    max-height:260px;
+    overflow:auto;
+    background:#071120;
+    border:1px solid #1d2b41;
+    border-radius:11px;
 }
 
 .log-item{
-padding:10px 11px;
-border-bottom:1px solid #18253a;
-font-family:monospace;
-font-size:11px
-}
-
-.log-item:last-child{
-border:0
+    padding:9px 10px;
+    border-bottom:1px solid #18253a;
+    font-family:monospace;
+    font-size:10px;
 }
 
 .green{
-color:#35dd78
+    color:#35dd78;
 }
 
 .red{
-color:#ff6262
+    color:#ff6262;
 }
 
 .white{
-color:#d9e0ec
+    color:#d9e0ec;
 }
 
 .tip{
-margin-top:12px;
-color:#8f9db3;
-font-size:11px;
-line-height:1.55
+    margin-top:10px;
+    color:#8f9db3;
+    font-size:10px;
+    line-height:1.5;
 }
 
 footer{
-padding:5px 16px 28px;
-text-align:center;
-color:#6e7c93;
-font-size:11px
+    padding:6px 16px 28px;
+    text-align:center;
+    color:#6e7c93;
+    font-size:10px;
 }
 
 .powered{
-margin-top:5px
+    margin-top:5px;
 }
 
 .powered b{
-color:#ff3b30
+    color:#ff3b30;
 }
 
 .overlay{
-position:fixed;
-inset:0;
-z-index:50;
-display:none;
-align-items:center;
-justify-content:center;
-padding:20px;
-background:rgba(0,0,0,.8)
+    position:fixed;
+    inset:0;
+    z-index:50;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(0,0,0,.82);
 }
 
 .overlay.show{
-display:flex
+    display:flex;
 }
 
 .alert{
-width:min(620px,100%);
-padding:25px 20px 20px;
-text-align:center;
-background:#18253a;
-border:2px solid #ef5350;
-border-radius:18px;
-box-shadow:0 25px 80px rgba(0,0,0,.55)
+    width:min(600px,100%);
+    padding:24px 18px 18px;
+    text-align:center;
+    background:#18253a;
+    border:2px solid #ef5350;
+    border-radius:18px;
+    box-shadow:0 25px 80px rgba(0,0,0,.55);
 }
 
 .alert-icon{
-font-size:58px
+    font-size:55px;
 }
 
 .alert h2{
-margin:7px 0;
-color:#ff5b5b;
-font-size:29px
+    margin:7px 0;
+    color:#ff5b5b;
+    font-size:26px;
 }
 
 .alert p{
-color:#d6deeb
+    color:#d6deeb;
+    font-size:13px;
 }
 
 .detail{
-margin:17px 0;
-padding:14px;
-text-align:left;
-border-radius:11px;
-background:#091426;
-color:#ccd5e2;
-line-height:1.8
+    margin:15px 0;
+    padding:12px;
+    text-align:left;
+    border-radius:10px;
+    background:#091426;
+    color:#ccd5e2;
+    line-height:1.8;
+    font-size:12px;
 }
 
 .alert button{
-width:100%;
-background:#ef5350
+    width:100%;
+    background:#ef5350;
 }
 
 @media(max-width:520px){
 
-.title{
-font-size:23px
-}
+    .title{
+        font-size:22px;
+    }
 
-.camera{
-height:285px
-}
+    .camera{
+        height:285px;
+    }
 
-.card{
-margin:12px;
-padding:14px
-}
+    .card{
+        margin:11px;
+        padding:13px;
+    }
 
-.stats strong{
-font-size:21px
-}
-
-button{
-font-size:12px
-}
+    button{
+        font-size:12px;
+        padding:12px 5px;
+    }
 
 }
 </style>
@@ -404,11 +397,11 @@ font-size:12px
 <header class="header">
 
 <h1 class="title">
-🔥 Detektor Api & Bara
+🔥 Detektor Api & Asap
 </h1>
 
 <div class="subtitle">
-Kamera aktif = deteksi otomatis berjalan.
+Deteksi otomatis sumber panas/nyala yang terlihat kamera.
 </div>
 
 </header>
@@ -419,16 +412,15 @@ Kamera aktif = deteksi otomatis berjalan.
 <div class="camera">
 
 <video
-id="video"
-autoplay
-muted
-playsinline>
+    id="video"
+    autoplay
+    muted
+    playsinline>
 </video>
 
-
 <div
-class="placeholder"
-id="placeholder">
+    class="placeholder"
+    id="placeholder">
 
 <div>
 
@@ -443,28 +435,25 @@ Kamera belum aktif
 <br>
 
 <small>
-Tekan Mulai Kamera untuk memulai
+Tekan Mulai Kamera
 </small>
 
 </div>
 
 </div>
 
-
 <div
-class="badge offline"
-id="badge">
+    class="badge offline"
+    id="badge">
 
 ● OFFLINE
 
 </div>
 
-
 <div
-class="detection-frame"
-id="detectionFrame">
+    class="detection-frame"
+    id="detectionFrame">
 </div>
-
 
 <div class="scan"></div>
 
@@ -474,59 +463,49 @@ id="detectionFrame">
 <div class="controls">
 
 <button
-class="primary"
-id="start">
+    class="primary"
+    id="start">
 
 ▶ Mulai Kamera
-
 </button>
 
-
 <button
-class="stop"
-id="stop"
-disabled>
+    class="stop"
+    id="stop"
+    disabled>
 
 ■ Matikan
-
 </button>
 
-
 <button
-class="cameraBtn"
-id="switchCamera">
+    class="cameraBtn"
+    id="switchCamera">
 
 🔄 Ubah Kamera
-
 </button>
 
-
 <button
-class="flashBtn"
-id="flash">
+    class="flashBtn"
+    id="flash">
 
 🔦 Nyalakan Flash
-
 </button>
 
-
 <button
-class="voiceBtn"
-id="voice">
+    class="voiceBtn"
+    id="voice">
 
 🔊 Nyalakan Suara
-
 </button>
 
 </div>
 
 
 <div
-class="status"
-id="status">
+    class="status"
+    id="status">
 
-Tekan Mulai Kamera.
-Setelah kamera aktif, deteksi dan suara berjalan otomatis.
+Kamera belum aktif.
 
 </div>
 
@@ -548,11 +527,10 @@ Setelah kamera aktif, deteksi dan suara berjalan otomatis.
 </strong>
 
 <span>
-Kejadian
+Peringatan
 </span>
 
 </div>
-
 
 <div class="stat">
 
@@ -565,7 +543,6 @@ Skor Deteksi
 </span>
 
 </div>
-
 
 <div class="stat">
 
@@ -591,16 +568,16 @@ Terakhir
 </h2>
 
 <div
-class="log"
-id="log">
+    class="log"
+    id="log">
 </div>
 
 <div class="tip">
 
-Sistem menggunakan analisis warna, kecerahan,
-dan perubahan cahaya untuk mencari indikasi
-api atau bara kecil. Hasilnya bukan alat
-keselamatan kebakaran profesional.
+Sistem menganalisis warna dan tingkat
+kecerahan dari kamera. Deteksi ini
+bukan pengganti alat keselamatan
+kebakaran profesional.
 
 </div>
 
@@ -610,7 +587,7 @@ keselamatan kebakaran profesional.
 <footer>
 
 <div>
-Fire & Ember Detector • HTML + CSS + JavaScript
+Fire & Smoke Detector
 </div>
 
 <div class="powered">
@@ -628,8 +605,8 @@ Pratama Andika Wiyoga
 
 
 <div
-class="overlay"
-id="overlay">
+    class="overlay"
+    id="overlay">
 
 <div class="alert">
 
@@ -638,18 +615,18 @@ id="overlay">
 </div>
 
 <h2>
-API TERDETEKSI!
+BAHAYA TERDETEKSI!
 </h2>
 
-<p>
-Kemungkinan sumber api atau bara
-terdeteksi oleh kamera.
+<p id="alertMessage">
+Kemungkinan sumber api atau benda menyala
+terdeteksi di depan kamera.
 </p>
 
 <div class="detail">
 
 <b>
-Skor Deteksi:
+Skor:
 </b>
 
 <span id="alertScore">
@@ -730,6 +707,9 @@ document.getElementById("alertScore");
 const alertTime =
 document.getElementById("alertTime");
 
+const alertMessage =
+document.getElementById("alertMessage");
+
 const detectionFrame =
 document.getElementById("detectionFrame");
 
@@ -748,7 +728,7 @@ let lastAlert = 0;
 
 let currentlyDetected = false;
 
-let detectionFrames = 0;
+let fireFrames = 0;
 
 let normalFrames = 0;
 
@@ -800,15 +780,11 @@ logElement.prepend(item);
 function cameraStatus(active){
 
 badge.textContent =
-active ?
-"● ONLINE" :
-"● OFFLINE";
+active ? "● ONLINE" : "● OFFLINE";
 
 badge.className =
 "badge " +
-(active ?
-"online" :
-"offline");
+(active ? "online" : "offline");
 
 }
 
@@ -840,25 +816,25 @@ return;
 
 window.speechSynthesis.cancel();
 
-const utterance =
+const speech =
 new SpeechSynthesisUtterance(text);
 
-utterance.lang =
+speech.lang =
 "id-ID";
 
-utterance.rate =
+speech.rate =
 0.9;
 
-utterance.pitch =
+speech.pitch =
 1;
 
-utterance.volume =
+speech.volume =
 1;
 
 const voices =
 window.speechSynthesis.getVoices();
 
-const indonesiaVoice =
+const indonesia =
 voices.find(
 voice =>
 voice.lang &&
@@ -867,15 +843,15 @@ voice.lang
 .startsWith("id")
 );
 
-if(indonesiaVoice){
+if(indonesia){
 
-utterance.voice =
-indonesiaVoice;
+speech.voice =
+indonesia;
 
 }
 
 window.speechSynthesis.speak(
-utterance
+speech
 );
 
 }
@@ -892,12 +868,11 @@ audioEnabled = true;
 voiceButton.textContent =
 "🔊 Suara Aktif";
 
-voiceButton.classList.add(
-"active"
-);
+voiceButton.style.background =
+"#208b55";
 
 log(
-"🔊 Suara otomatis aktif.",
+"🔊 Suara otomatis diaktifkan.",
 "green"
 );
 
@@ -912,7 +887,7 @@ speak(
    ALARM
 ========================= */
 
-function alarm(){
+function makeAlarm(){
 
 if(!audioEnabled){
 
@@ -968,7 +943,7 @@ setTimeout(
 ()=>{
 oscillator.stop();
 },
-1100
+1000
 );
 
 }catch(error){
@@ -984,7 +959,7 @@ console.log(error);
    PERINGATAN
 ========================= */
 
-function fireAlert(score){
+function triggerDanger(score){
 
 const current =
 Date.now();
@@ -996,7 +971,7 @@ return;
 }
 
 if(
-current-lastAlert <
+current - lastAlert <
 6000
 ){
 
@@ -1029,12 +1004,15 @@ new Date().toLocaleString(
 "id-ID"
 );
 
+alertMessage.textContent =
+"Indikasi api/benda menyala terdeteksi di depan kamera.";
+
 overlay.classList.add(
 "show"
 );
 
 statusElement.textContent =
-"🚨 API TERDETEKSI! Kemungkinan sumber api atau bara terlihat.";
+"🚨 BAHAYA! SUMBER NYALA TERDETEKSI!";
 
 statusElement.classList.add(
 "danger"
@@ -1045,25 +1023,25 @@ detectionFrame.classList.add(
 );
 
 log(
-"🚨 API/BARA TERDETEKSI! Skor: " +
+"🚨 Sumber nyala terdeteksi. Skor: " +
 score + "%",
 "red"
 );
 
-alarm();
+makeAlarm();
 
 speak(
-"Peringatan. Api atau bara terdeteksi di depan kamera."
+"Peringatan. Sumber api atau benda menyala terdeteksi di depan kamera."
 );
 
 }
 
 
 /* =========================
-   ANALISIS FRAME
+   DETEKSI
 ========================= */
 
-function calculateDetection(){
+function getDetectionScore(){
 
 if(
 video.readyState < 2 ||
@@ -1075,21 +1053,17 @@ return 0;
 
 }
 
-
 const canvas =
 document.createElement("canvas");
 
 const width =
-140;
+120;
 
 const height =
-Math.max(
-70,
 Math.round(
-width *
 video.videoHeight /
-video.videoWidth
-)
+video.videoWidth *
+width
 );
 
 canvas.width =
@@ -1114,7 +1088,7 @@ width,
 height
 );
 
-const pixels =
+const data =
 ctx.getImageData(
 0,
 0,
@@ -1122,110 +1096,92 @@ width,
 height
 ).data;
 
+let firePixels =
+0;
 
-let warmPixels = 0;
+let brightPixels =
+0;
 
-let hotPixels = 0;
-
-let brightWarmPixels = 0;
-
-let total = 0;
-
+let total =
+0;
 
 for(
 let i=0;
-i<pixels.length;
+i<data.length;
 i+=4
 ){
 
 const r =
-pixels[i];
+data[i];
 
 const g =
-pixels[i+1];
+data[i+1];
 
 const b =
-pixels[i+2];
+data[i+2];
 
 const brightness =
 (r+g+b)/3;
 
 
 /*
-Oranye.
+Merah/oranye.
 */
 
 const orange =
-r > 125 &&
-g > 45 &&
-g < 220 &&
+r > 135 &&
+g > 50 &&
+g < 235 &&
 b < 145 &&
 r > g*1.08;
 
 
 /*
-Kuning.
+Kuning terang.
 */
 
 const yellow =
 r > 160 &&
-g > 90 &&
-b < 130 &&
-r > b*1.35;
+g > 100 &&
+b < 125 &&
+r > b*1.4;
 
 
 /*
-Merah / bara.
+Merah terang.
 */
 
-const redEmber =
-r > 155 &&
-g < 145 &&
-b < 120 &&
-r > g*1.25;
+const red =
+r > 175 &&
+g < 135 &&
+b < 115 &&
+r > g*1.3;
 
 
 /*
-Titik sangat terang
-dengan warna hangat.
+Area sangat terang
+dengan dominasi merah.
 */
 
 const hot =
-r > 190 &&
-g > 65 &&
+r > 200 &&
+g > 90 &&
 b < 150 &&
-brightness > 125;
-
-
-/*
-Bara yang sangat merah.
-*/
-
-const ember =
-r > 185 &&
-g < 115 &&
-b < 90;
-
+brightness > 140;
 
 if(
 orange ||
 yellow ||
-redEmber
+red
 ){
 
-warmPixels++;
+firePixels++;
 
 }
 
 if(hot){
 
-hotPixels++;
-
-}
-
-if(ember){
-
-brightWarmPixels++;
+brightPixels++;
 
 }
 
@@ -1233,67 +1189,57 @@ total++;
 
 }
 
-
-const warmRatio =
-warmPixels /
+const colorRatio =
+firePixels /
 Math.max(total,1);
 
-const hotRatio =
-hotPixels /
+const brightRatio =
+brightPixels /
 Math.max(total,1);
-
-const emberRatio =
-brightWarmPixels /
-Math.max(total,1);
-
-
-/*
-Gabungan skor.
-
-Bara diberi bobot lebih tinggi.
-*/
 
 let score =
-warmRatio * 100 * 0.50 +
-hotRatio * 100 * 0.20 +
-emberRatio * 100 * 0.30;
+(
+colorRatio * 100 * .75
+)
++
+(
+brightRatio * 100 * .25
+);
 
-
-score =
+return Math.round(
 Math.max(
 0,
 Math.min(
 100,
 score
 )
+)
 );
-
-return Math.round(score);
 
 }
 
 
 /* =========================
-   DETEKSI OTOMATIS
+   LOOP DETEKSI
 ========================= */
 
-function detectFire(){
+function detect(){
 
 const score =
-calculateDetection();
+getDetectionScore();
 
 scoreElement.textContent =
 score + "%";
 
 
 /*
-Ambang cukup sensitif
-untuk sumber cahaya kecil.
+Lebih sensitif terhadap
+api kecil.
 */
 
-if(score >= 4){
+if(score >= 5){
 
-detectionFrames++;
+fireFrames++;
 
 normalFrames = 0;
 
@@ -1301,34 +1247,29 @@ normalFrames = 0;
 
 normalFrames++;
 
-detectionFrames = 0;
+fireFrames = 0;
 
 }
 
 
 /*
-Harus terlihat beberapa
-kali agar tidak langsung
-salah alarm.
+Harus muncul beberapa
+frame agar lebih stabil.
 */
 
-if(
-detectionFrames >= 3
-){
+if(fireFrames >= 2){
 
-fireAlert(score);
+triggerDanger(score);
 
 }
 
 
 /*
-Reset ketika kondisi
-sudah normal.
+Kembali normal setelah
+beberapa frame bersih.
 */
 
-if(
-normalFrames >= 7
-){
+if(normalFrames >= 6){
 
 currentlyDetected =
 false;
@@ -1341,12 +1282,8 @@ detectionFrame.classList.remove(
 "danger"
 );
 
-if(stream){
-
 statusElement.textContent =
-"🔍 Memindai api dan bara secara otomatis.";
-
-}
+"🔍 Memindai sumber api/asap secara otomatis.";
 
 }
 
@@ -1382,14 +1319,13 @@ track.getCapabilities ?
 track.getCapabilities() :
 {};
 
-
 if(!capabilities.torch){
 
 statusElement.textContent =
-"⚠️ Flash tidak dapat dikontrol oleh browser/perangkat ini.";
+"⚠️ Flash kamera tidak bisa dikontrol oleh browser ini.";
 
 log(
-"⚠️ Kontrol flash tidak tersedia.",
+"Flash/torch tidak didukung browser.",
 "red"
 );
 
@@ -1397,20 +1333,17 @@ return;
 
 }
 
-
 try{
 
 torchOn =
 !torchOn;
 
 await track.applyConstraints({
-
 advanced:[
 {
 torch:torchOn
 }
 ]
-
 });
 
 flashButton.textContent =
@@ -1421,12 +1354,12 @@ torchOn ?
 statusElement.textContent =
 torchOn ?
 "🔦 Flash menyala." :
-"🔦 Flash dimatikan.";
+"Flash dimatikan.";
 
 log(
 torchOn ?
 "🔦 Flash dinyalakan." :
-"🔦 Flash dimatikan.",
+"Flash dimatikan.",
 "green"
 );
 
@@ -1435,12 +1368,9 @@ torchOn ?
 console.error(error);
 
 log(
-"❌ Flash tidak dapat dinyalakan.",
+"❌ Flash gagal dikontrol.",
 "red"
 );
-
-statusElement.textContent =
-"❌ Flash tidak dapat dikontrol pada perangkat/browser ini.";
 
 }
 
@@ -1460,8 +1390,9 @@ if(
 !navigator.mediaDevices.getUserMedia
 ){
 
-statusElement.textContent =
-"Browser tidak mendukung kamera.";
+alert(
+"Browser tidak mendukung akses kamera."
+);
 
 return;
 
@@ -1469,20 +1400,9 @@ return;
 
 
 /*
-Aktifkan audio otomatis
-karena user menekan
-Mulai Kamera.
+Aktifkan audio karena
+user menekan tombol.
 */
-
-audioEnabled = true;
-
-voiceButton.textContent =
-"🔊 Suara Aktif";
-
-voiceButton.classList.add(
-"active"
-);
-
 
 try{
 
@@ -1497,11 +1417,14 @@ await audioContext.resume();
 }catch(e){}
 
 
+/*
+Default kamera depan.
+*/
+
 stream =
 await navigator.mediaDevices.getUserMedia({
 
 video:{
-
 facingMode:{
 ideal:currentCamera
 },
@@ -1513,19 +1436,16 @@ ideal:1920
 height:{
 ideal:1080
 }
-
 },
 
 audio:false
 
 });
 
-
 video.srcObject =
 stream;
 
 await video.play();
-
 
 placeholder.style.display =
 "none";
@@ -1538,50 +1458,26 @@ false;
 
 cameraStatus(true);
 
-torchOn = false;
-
 fireFrames = 0;
 
 normalFrames = 0;
 
 currentlyDetected = false;
 
-
 statusElement.textContent =
-"✅ Kamera aktif. Deteksi api dan bara berjalan otomatis.";
+"✅ Kamera aktif. Deteksi otomatis berjalan.";
 
 log(
-"✅ Kamera berhasil aktif.",
-"green"
-);
-
-log(
-currentCamera === "user" ?
-"📷 Kamera depan aktif." :
-"📷 Kamera belakang aktif.",
+"✅ Kamera aktif: " +
+(currentCamera === "user" ?
+"Kamera Depan" :
+"Kamera Belakang"),
 "green"
 );
 
 
 /*
-PESAN SUARA OTOMATIS
-SAAT KAMERA AKTIF.
-*/
-
-setTimeout(
-()=>{
-
-speak(
-"Kamera aktif. Sistem deteksi api dan bara berjalan otomatis."
-);
-
-},
-350
-);
-
-
-/*
-Deteksi setiap 600ms.
+Deteksi otomatis.
 */
 
 clearInterval(
@@ -1590,9 +1486,28 @@ detectionTimer
 
 detectionTimer =
 setInterval(
-detectFire,
+detect,
 600
 );
+
+
+/*
+Suara hanya otomatis
+kalau user sudah mengaktifkannya.
+*/
+
+if(audioEnabled){
+
+setTimeout(
+()=>{
+speak(
+"Kamera aktif. Sistem deteksi otomatis berjalan."
+);
+},
+300
+);
+
+}
 
 }catch(error){
 
@@ -1605,7 +1520,7 @@ error.name,
 );
 
 statusElement.textContent =
-"❌ Kamera gagal diakses. Izinkan akses kamera untuk website ini.";
+"❌ Kamera gagal diakses. Izinkan akses kamera.";
 
 }
 
@@ -1634,8 +1549,10 @@ return;
 
 }
 
+const oldStream =
+stream;
 
-stream
+oldStream
 .getTracks()
 .forEach(
 track =>
@@ -1646,12 +1563,10 @@ clearInterval(
 detectionTimer
 );
 
-
 currentCamera =
 currentCamera === "user" ?
 "environment" :
 "user";
-
 
 try{
 
@@ -1659,7 +1574,6 @@ stream =
 await navigator.mediaDevices.getUserMedia({
 
 video:{
-
 facingMode:{
 exact:currentCamera
 },
@@ -1671,25 +1585,21 @@ ideal:1920
 height:{
 ideal:1080
 }
-
 },
 
 audio:false
 
 });
 
-
 video.srcObject =
 stream;
 
 await video.play();
 
-
 torchOn = false;
 
 flashButton.textContent =
 "🔦 Nyalakan Flash";
-
 
 log(
 "🔄 Kamera diubah ke " +
@@ -1702,12 +1612,16 @@ currentCamera === "user" ?
 );
 
 statusElement.textContent =
-"🔄 Kamera berhasil diubah.";
-
+"🔄 Beralih ke " +
+(
+currentCamera === "user" ?
+"Kamera Depan." :
+"Kamera Belakang."
+);
 
 detectionTimer =
 setInterval(
-detectFire,
+detect,
 600
 );
 
@@ -1716,12 +1630,12 @@ detectFire,
 console.error(error);
 
 log(
-"❌ Gagal mengganti kamera.",
+"❌ Kamera tujuan tidak tersedia.",
 "red"
 );
 
 statusElement.textContent =
-"❌ Kamera tersebut tidak tersedia.";
+"❌ Kamera tidak dapat diganti.";
 
 }
 
@@ -1741,7 +1655,6 @@ detectionTimer
 detectionTimer =
 null;
 
-
 if(stream){
 
 stream
@@ -1752,7 +1665,6 @@ track.stop()
 );
 
 }
-
 
 stream =
 null;
@@ -1804,7 +1716,7 @@ log(
 
 
 /* =========================
-   TOMBOL
+   EVENT
 ========================= */
 
 startButton.addEventListener(
@@ -1840,9 +1752,9 @@ overlay.classList.remove("show");
 );
 
 
-/* =========================
-   VOICE LIST
-========================= */
+/*
+Siapkan voice list.
+*/
 
 if(
 "speechSynthesis" in window
@@ -1856,10 +1768,6 @@ window.speechSynthesis.getVoices();
 }
 
 
-/* =========================
-   START
-========================= */
-
 cameraStatus(false);
 
 log(
@@ -1867,7 +1775,7 @@ log(
 );
 
 log(
-"Kamera depan digunakan sebagai kamera awal."
+"Kamera depan akan digunakan terlebih dahulu."
 );
 
 </script>
