@@ -2,1681 +2,639 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-
-<title>Fire Detector</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Voice Assistant</title>
 
 <style>
 *{
-box-sizing:border-box;
--webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-margin:0;
-padding:0;
-background:#050b15;
-color:white;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
 }
 
 body{
-display:flex;
-justify-content:center;
+    min-height:100vh;
+    font-family:Arial,sans-serif;
+    background:#050816;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
 }
 
-.app{
-width:100%;
-max-width:760px;
-min-height:100vh;
-background:#07101f;
+.container{
+    width:92%;
+    max-width:430px;
+    min-height:650px;
+    padding:25px 20px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:30px;
+    background:rgba(10,15,35,.92);
+    box-shadow:0 0 50px rgba(0,150,255,.15);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
 }
 
-.header{
-padding:24px 18px;
-background:linear-gradient(180deg,#19273d,#101b2d);
-border-bottom:1px solid #30415c;
+.logo{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:42px;
+    background:linear-gradient(145deg,#172554,#0f172a);
+    box-shadow:0 0 35px rgba(0,170,255,.35);
+    margin-top:10px;
 }
 
-.title{
-margin:0;
-font-size:25px;
-font-weight:800;
+h1{
+    margin-top:18px;
+    font-size:27px;
 }
 
 .subtitle{
-margin-top:7px;
-font-size:13px;
-color:#9eabc0;
-}
-
-.card{
-margin:14px;
-padding:15px;
-border-radius:16px;
-background:linear-gradient(145deg,#16243a,#0e192c);
-border:1px solid #263750;
-}
-
-.section-title{
-margin:0 0 13px;
-font-size:18px;
-}
-
-.camera{
-position:relative;
-width:100%;
-height:330px;
-background:#02060b;
-border-radius:14px;
-overflow:hidden;
-border:1px solid #2b3a52;
-}
-
-#video{
-width:100%;
-height:100%;
-display:block;
-object-fit:cover;
-background:#02060b;
-transform:scaleX(-1);
-}
-
-#video.rear{
-transform:scaleX(1);
-}
-
-.placeholder{
-position:absolute;
-inset:0;
-display:grid;
-place-items:center;
-text-align:center;
-background:#07101f;
-color:#aab6c9;
-z-index:2;
-}
-
-.placeholder .icon{
-font-size:50px;
-margin-bottom:8px;
-}
-
-.badge{
-position:absolute;
-top:12px;
-right:12px;
-z-index:5;
-padding:7px 11px;
-border-radius:20px;
-font-size:11px;
-font-weight:bold;
-background:#091222;
-}
-
-.online{
-color:#5be68f;
-border:1px solid #1e9d58;
-}
-
-.offline{
-color:#ff8585;
-border:1px solid #9e3e3e;
-}
-
-.frame{
-position:absolute;
-z-index:3;
-left:7%;
-top:10%;
-width:86%;
-height:80%;
-border:2px solid rgba(255,255,255,.18);
-border-radius:18px;
-pointer-events:none;
-}
-
-.frame.danger{
-border-color:#ff3030;
-box-shadow:0 0 25px rgba(255,0,0,.8);
-}
-
-.scan{
-position:absolute;
-z-index:4;
-left:0;
-width:100%;
-height:2px;
-background:#31ff75;
-box-shadow:0 0 12px #31ff75;
-opacity:.6;
-animation:scan 2.5s linear infinite;
-pointer-events:none;
-}
-
-@keyframes scan{
-0%{top:0}
-50%{top:100%}
-100%{top:0}
-}
-
-.controls{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:9px;
-margin-top:12px;
-}
-
-button{
-border:0;
-border-radius:11px;
-padding:14px 8px;
-font-size:13px;
-font-weight:800;
-color:white;
-background:#2a3951;
-cursor:pointer;
--webkit-appearance:none;
-touch-action:manipulation;
-}
-
-button:active{
-opacity:.75;
-transform:scale(.98);
-}
-
-button:disabled{
-opacity:.45;
-}
-
-.start{
-background:#3184ff;
-}
-
-.stop{
-background:#3a4659;
-}
-
-.cameraBtn{
-background:#247bce;
-}
-
-.flashBtn{
-background:#b88416;
-}
-
-.voiceBtn{
-background:#7657d9;
-}
-
-.voiceBtn.active{
-background:#208b55;
+    margin-top:7px;
+    color:#94a3b8;
+    font-size:14px;
 }
 
 .status{
-margin-top:11px;
-padding:12px;
-border-radius:10px;
-background:#091222;
-border:1px solid #1e2c43;
-font-size:13px;
-line-height:1.5;
+    margin-top:25px;
+    padding:10px 18px;
+    border-radius:30px;
+    background:#111827;
+    color:#93c5fd;
+    font-size:14px;
 }
 
-.status.danger{
-background:#641c1c;
-border-color:#ff3838;
+.orb{
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    margin:35px 0 25px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:radial-gradient(circle,#2563eb 0%,#172554 45%,#0b1025 72%);
+    box-shadow:0 0 35px rgba(37,99,235,.4);
+    transition:.3s;
 }
 
-.status.safe{
-background:#0b2b1b;
-border-color:#208b55;
-color:#70f0a0;
+.orb.listening{
+    animation:pulse 1s infinite;
+    box-shadow:0 0 70px rgba(0,170,255,.8);
 }
 
-.stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:8px;
+@keyframes pulse{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.08)}
 }
 
-.stat{
-padding:14px 5px;
-text-align:center;
-background:#091426;
-border:1px solid #263750;
-border-radius:11px;
-}
-
-.stat strong{
-display:block;
-font-size:23px;
-color:#4c92ff;
-margin-bottom:5px;
-}
-
-.stat span{
-font-size:10px;
-color:#9daabd;
-}
-
-.log{
-height:220px;
-overflow:auto;
-background:#071120;
-border:1px solid #1d2b41;
-border-radius:11px;
-}
-
-.log-item{
-padding:9px;
-border-bottom:1px solid #18253a;
-font-family:monospace;
-font-size:11px;
-}
-
-.green{
-color:#35dd78;
-}
-
-.red{
-color:#ff6262;
-}
-
-.white{
-color:#d9e0ec;
-}
-
-.tip{
-margin-top:10px;
-font-size:11px;
-line-height:1.5;
-color:#8f9db3;
-}
-
-footer{
-text-align:center;
-padding:10px 15px 28px;
-font-size:11px;
-color:#6e7c93;
-}
-
-.powered{
-margin-top:5px;
-}
-
-.powered b{
-color:#ff3b30;
-}
-
-.overlay{
-position:fixed;
-z-index:100;
-inset:0;
-display:none;
-align-items:center;
-justify-content:center;
-padding:18px;
-background:rgba(0,0,0,.8);
-}
-
-.overlay.show{
-display:flex;
-}
-
-.alert{
-width:100%;
-max-width:500px;
-padding:25px 18px;
-text-align:center;
-background:#18253a;
-border:2px solid #ef5350;
-border-radius:18px;
-}
-
-.alert-icon{
-font-size:55px;
-}
-
-.alert h2{
-margin:7px 0;
-color:#ff5b5b;
-font-size:28px;
-}
-
-.detail{
-margin:15px 0;
-padding:13px;
-text-align:left;
-border-radius:10px;
-background:#091426;
-line-height:1.8;
-}
-
-.alert button{
-width:100%;
-background:#ef5350;
-}
-
-@media(max-width:520px){
-
-.camera{
-height:285px;
-}
-
-.card{
-margin:11px;
-padding:13px;
-}
-
-.title{
-font-size:22px;
+.mic{
+    font-size:70px;
 }
 
 button{
-font-size:12px;
+    border:0;
+    cursor:pointer;
 }
 
+.listenBtn{
+    width:75px;
+    height:75px;
+    border-radius:50%;
+    background:#2563eb;
+    color:white;
+    font-size:30px;
+    box-shadow:0 8px 30px rgba(37,99,235,.4);
+}
+
+.listenBtn:active{
+    transform:scale(.94);
+}
+
+.result{
+    width:100%;
+    margin-top:25px;
+    padding:18px;
+    border-radius:18px;
+    background:#0f172a;
+    border:1px solid rgba(255,255,255,.08);
+    min-height:90px;
+}
+
+.label{
+    color:#64748b;
+    font-size:12px;
+    margin-bottom:8px;
+}
+
+.text{
+    font-size:16px;
+    line-height:1.5;
+}
+
+.commands{
+    width:100%;
+    margin-top:18px;
+}
+
+.commands p{
+    color:#64748b;
+    font-size:12px;
+    margin-bottom:8px;
+}
+
+.command-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+}
+
+.command{
+    padding:7px 10px;
+    border-radius:10px;
+    background:#111827;
+    color:#cbd5e1;
+    font-size:11px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<div class="container">
 
-<header class="header">
+    <div class="logo">🤖</div>
 
-<h1 class="title">
-🔥 Detektor Api Kamera HP
-</h1>
+    <h1>AI Assistant</h1>
+    <div class="subtitle">Voice Command Assistant</div>
 
-<div class="subtitle">
-Kamera aktif = pemantauan api otomatis.
-</div>
+    <div class="status" id="status">
+        Tekan mikrofon untuk mulai
+    </div>
 
-</header>
+    <div class="orb" id="orb">
+        <div class="mic">🎙️</div>
+    </div>
 
+    <button class="listenBtn" id="listenBtn">
+        🎤
+    </button>
 
-<section class="card">
+    <div class="result">
+        <div class="label">PERINTAH ANDA</div>
+        <div class="text" id="userText">
+            Belum ada perintah...
+        </div>
+    </div>
 
-<div class="camera">
+    <div class="result">
+        <div class="label">AI</div>
+        <div class="text" id="aiText">
+            Silakan berikan perintah.
+        </div>
+    </div>
 
-<video
-id="video"
-autoplay
-muted
-playsinline>
-</video>
+    <div class="commands">
+        <p>Contoh perintah:</p>
 
-<div
-id="placeholder"
-class="placeholder">
-
-<div>
-
-<div class="icon">📷</div>
-
-<b>Kamera belum aktif</b>
-
-<br>
-
-<small>
-Tekan Mulai Kamera
-</small>
-
-</div>
-
-</div>
-
-<div
-id="badge"
-class="badge offline">
-
-● OFFLINE
+        <div class="command-list">
+            <div class="command">"Buka WhatsApp"</div>
+            <div class="command">"Buka YouTube"</div>
+            <div class="command">"Buka Google"</div>
+            <div class="command">"Buka kamera"</div>
+            <div class="command">"Nyalakan senter"</div>
+            <div class="command">"Matikan senter"</div>
+            <div class="command">"Jam berapa sekarang"</div>
+        </div>
+    </div>
 
 </div>
-
-<div
-id="frame"
-class="frame">
-</div>
-
-<div class="scan"></div>
-
-</div>
-
-
-<div class="controls">
-
-<button
-id="start"
-class="start">
-▶ Mulai Kamera
-</button>
-
-<button
-id="stop"
-class="stop"
-disabled>
-■ Matikan
-</button>
-
-<button
-id="switch"
-class="cameraBtn">
-🔄 Ubah Kamera
-</button>
-
-<button
-id="flash"
-class="flashBtn">
-🔦 Nyalakan Flash
-</button>
-
-<button
-id="voice"
-class="voiceBtn">
-🔊 Nyalakan Suara
-</button>
-
-</div>
-
-
-<div
-id="status"
-class="status">
-
-Tekan Mulai Kamera untuk memulai.
-
-</div>
-
-</section>
-
-
-<section class="card">
-
-<h2 class="section-title">
-📊 Statistik
-</h2>
-
-<div class="stats">
-
-<div class="stat">
-<strong id="events">0</strong>
-<span>Kejadian</span>
-</div>
-
-<div class="stat">
-<strong id="score">0%</strong>
-<span>Skor Api</span>
-</div>
-
-<div class="stat">
-<strong id="last">--:--:--</strong>
-<span>Terakhir</span>
-</div>
-
-</div>
-
-</section>
-
-
-<section class="card">
-
-<h2 class="section-title">
-📜 Log Aktivitas
-</h2>
-
-<div
-id="log"
-class="log">
-</div>
-
-<div class="tip">
-Deteksi ini merupakan analisis warna dan
-kecerahan kamera. Hasilnya bukan alat
-keselamatan kebakaran profesional.
-</div>
-
-</section>
-
-
-<footer>
-
-<div>
-Fire Detector • HTML + CSS + JavaScript
-</div>
-
-<div class="powered">
-Powered by <b>Pratama Andika Wiyoga</b>
-</div>
-
-</footer>
-
-</div>
-
-
-<div
-id="overlay"
-class="overlay">
-
-<div class="alert">
-
-<div class="alert-icon">
-🚨
-</div>
-
-<h2>
-API TERDETEKSI!
-</h2>
-
-<p>
-Kemungkinan api terdeteksi oleh kamera.
-</p>
-
-<div class="detail">
-
-<b>Skor:</b>
-<span id="alertScore">0%</span>
-
-<br>
-
-<b>Waktu:</b>
-<span id="alertTime">--</span>
-
-</div>
-
-<button id="close">
-Tutup Peringatan
-</button>
-
-</div>
-
-</div>
-
 
 <script>
+const listenBtn = document.getElementById("listenBtn");
+const statusText = document.getElementById("status");
+const userText = document.getElementById("userText");
+const aiText = document.getElementById("aiText");
+const orb = document.getElementById("orb");
 
-/* ==================================================
-   ELEMENT
-================================================== */
-
-const video = document.getElementById("video");
-const placeholder = document.getElementById("placeholder");
-const badge = document.getElementById("badge");
-
-const startBtn = document.getElementById("start");
-const stopBtn = document.getElementById("stop");
-const switchBtn = document.getElementById("switch");
-const flashBtn = document.getElementById("flash");
-const voiceBtn = document.getElementById("voice");
-
-const statusBox = document.getElementById("status");
-
-const eventsBox = document.getElementById("events");
-const scoreBox = document.getElementById("score");
-const lastBox = document.getElementById("last");
-
-const logBox = document.getElementById("log");
-
-const frame = document.getElementById("frame");
-
-const overlay = document.getElementById("overlay");
-const closeBtn = document.getElementById("close");
-
-const alertScore = document.getElementById("alertScore");
-const alertTime = document.getElementById("alertTime");
-
-
-/* ==================================================
-   STATE
-================================================== */
-
+let recognition;
 let stream = null;
+let videoTrack = null;
 
-let cameraMode = "user";
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
 
-let detector = null;
+if (!SpeechRecognition) {
 
-let torch = false;
+    statusText.innerText =
+        "Browser tidak mendukung voice recognition";
 
-let soundOn = false;
+    aiText.innerText =
+        "Coba gunakan Chrome atau browser yang mendukung Speech Recognition.";
 
-let fireActive = false;
+} else {
 
-let fireFrames = 0;
+    recognition = new SpeechRecognition();
 
-let clearFrames = 0;
+    recognition.lang = "id-ID";
+    recognition.continuous = false;
+    recognition.interimResults = false;
 
-let eventCount = 0;
+    recognition.onstart = function(){
 
-let lastDetectionTime = 0;
+        statusText.innerText = "Mendengarkan...";
+        orb.classList.add("listening");
 
-let audioContext = null;
+        listenBtn.innerText = "⏹️";
+    };
 
+    recognition.onend = function(){
 
-/* ==================================================
-   TIME
-================================================== */
+        statusText.innerText =
+            "Tekan mikrofon untuk berbicara";
 
-function getTime(){
+        orb.classList.remove("listening");
 
-return new Date().toLocaleTimeString(
-"id-ID",
-{
-hour12:false
-}
-);
+        listenBtn.innerText = "🎤";
+    };
 
-}
+    recognition.onerror = function(event){
 
+        statusText.innerText =
+            "Terjadi kesalahan: " + event.error;
 
-/* ==================================================
-   LOG
-================================================== */
+        orb.classList.remove("listening");
 
-function addLog(text,type="white"){
+        listenBtn.innerText = "🎤";
+    };
 
-const item = document.createElement("div");
+    recognition.onresult = function(event){
 
-item.className =
-"log-item " + type;
+        const command =
+            event.results[0][0].transcript
+            .toLowerCase()
+            .trim();
 
-item.textContent =
-"[" + getTime() + "] " + text;
+        userText.innerText = command;
 
-logBox.prepend(item);
-
-}
-
-
-/* ==================================================
-   STATUS CAMERA
-================================================== */
-
-function setOnline(value){
-
-if(value){
-
-badge.textContent = "● ONLINE";
-
-badge.className =
-"badge online";
-
-}else{
-
-badge.textContent = "● OFFLINE";
-
-badge.className =
-"badge offline";
-
+        processCommand(command);
+    };
 }
 
-}
+listenBtn.addEventListener("click",function(){
 
+    if(!recognition) return;
 
-/* ==================================================
-   CAMERA MIRROR
-================================================== */
+    try{
+        recognition.start();
+    }catch(e){
+        console.log(e);
+    }
+});
 
-function setMirror(){
-
-if(cameraMode === "user"){
-
-video.classList.remove("rear");
-
-}else{
-
-video.classList.add("rear");
-
-}
-
-}
-
-
-/* ==================================================
-   SPEECH
-================================================== */
 
 function speak(text){
 
-if(!soundOn){
+    if(!("speechSynthesis" in window)) return;
 
-return;
+    window.speechSynthesis.cancel();
 
-}
+    const speech =
+        new SpeechSynthesisUtterance(text);
 
-if(!window.speechSynthesis){
+    speech.lang = "id-ID";
+    speech.rate = 1;
+    speech.pitch = 1;
 
-return;
-
-}
-
-window.speechSynthesis.cancel();
-
-const speech =
-new SpeechSynthesisUtterance(text);
-
-speech.lang = "id-ID";
-
-speech.rate = 0.9;
-
-speech.pitch = 1;
-
-speech.volume = 1;
-
-const voices =
-window.speechSynthesis.getVoices();
-
-const indo =
-voices.find(
-v =>
-v.lang &&
-v.lang.toLowerCase().startsWith("id")
-);
-
-if(indo){
-
-speech.voice = indo;
-
-}
-
-window.speechSynthesis.speak(speech);
-
+    window.speechSynthesis.speak(speech);
 }
 
 
-/* ==================================================
-   VOICE BUTTON
-================================================== */
+function response(text){
 
-voiceBtn.addEventListener(
-"click",
-function(){
+    aiText.innerText = text;
 
-soundOn = true;
-
-voiceBtn.textContent =
-"🔊 Suara Aktif";
-
-voiceBtn.classList.add("active");
-
-addLog(
-"Suara otomatis diaktifkan.",
-"green"
-);
-
-speak(
-"Suara otomatis telah diaktifkan."
-);
-
-}
-);
-
-
-/* ==================================================
-   START CAMERA
-================================================== */
-
-async function startCamera(){
-
-if(
-!navigator.mediaDevices ||
-!navigator.mediaDevices.getUserMedia
-){
-
-statusBox.textContent =
-"❌ Browser tidak mendukung akses kamera.";
-
-addLog(
-"getUserMedia tidak tersedia.",
-"red"
-);
-
-return;
-
+    speak(text);
 }
 
 
-statusBox.textContent =
-"📷 Meminta izin kamera...";
+async function processCommand(command){
 
-addLog(
-"Meminta izin kamera."
-);
+    /* WHATSAPP */
 
+    if(
+        command.includes("buka whatsapp") ||
+        command.includes("buka wa")
+    ){
 
-try{
+        response("Baik, saya akan membuka WhatsApp.");
 
-const constraints = {
+        setTimeout(function(){
 
-video:{
-facingMode:{
-ideal:cameraMode
-},
-width:{
-ideal:1280
-},
-height:{
-ideal:720
-}
-},
+            window.location.href =
+                "https://wa.me/";
 
-audio:false
+        },1000);
 
-};
+        return;
+    }
 
 
-stream =
-await navigator.mediaDevices.getUserMedia(
-constraints
-);
+    /* YOUTUBE */
 
+    if(command.includes("buka youtube")){
 
-video.srcObject = stream;
+        response("Baik, saya membuka YouTube.");
 
-await video.play();
+        setTimeout(function(){
 
-setMirror();
+            window.location.href =
+                "https://youtube.com/";
 
+        },1000);
 
-placeholder.style.display =
-"none";
+        return;
+    }
 
-startBtn.disabled = true;
 
-stopBtn.disabled = false;
+    /* GOOGLE */
 
-setOnline(true);
+    if(command.includes("buka google")){
 
+        response("Baik, saya membuka Google.");
 
-statusBox.textContent =
-"✅ Kamera aktif. Pemantauan api berjalan.";
+        setTimeout(function(){
 
+            window.location.href =
+                "https://google.com/";
 
-addLog(
-cameraMode === "user"
-?
-"📷 Kamera depan aktif."
-:
-"📷 Kamera belakang aktif.",
-"green"
-);
+        },1000);
 
+        return;
+    }
 
-/*
-Aktifkan suara otomatis setelah
-interaksi tombol kamera.
-*/
 
-soundOn = true;
+    /* GOOGLE SEARCH */
 
-voiceBtn.textContent =
-"🔊 Suara Aktif";
+    if(
+        command.startsWith("cari ") ||
+        command.startsWith("search ")
+    ){
 
-voiceBtn.classList.add("active");
+        let query = command
+            .replace("cari ","")
+            .replace("search ","")
+            .trim();
 
+        if(query){
 
-setTimeout(
-function(){
+            response(
+                "Baik, saya mencari " + query
+            );
 
-speak(
-"Kamera aktif. Sistem deteksi api berjalan otomatis."
-);
+            setTimeout(function(){
 
-},
-400
-);
+                window.location.href =
+                    "https://www.google.com/search?q=" +
+                    encodeURIComponent(query);
 
+            },1000);
 
-startDetection();
+            return;
+        }
+    }
 
 
-}catch(error){
+    /* CAMERA */
 
-console.error(error);
+    if(
+        command.includes("buka kamera") ||
+        command.includes("nyalakan kamera")
+    ){
 
-let message =
-"❌ Kamera gagal digunakan.";
+        response(
+            "Baik, saya mencoba membuka kamera."
+        );
 
-if(error.name === "NotAllowedError"){
+        await openCamera();
 
-message =
-"❌ Izin kamera ditolak. Pilih Allow/Izinkan.";
+        return;
+    }
 
-}
 
-if(error.name === "NotFoundError"){
+    /* FLASHLIGHT ON */
 
-message =
-"❌ Kamera tidak ditemukan.";
+    if(
+        command.includes("nyalakan senter") ||
+        command.includes("hidupkan senter") ||
+        command.includes("senter nyala")
+    ){
 
-}
+        await flashlight(true);
 
-if(error.name === "NotReadableError"){
+        return;
+    }
 
-message =
-"❌ Kamera sedang digunakan aplikasi lain.";
 
-}
+    /* FLASHLIGHT OFF */
 
-if(error.name === "SecurityError"){
+    if(
+        command.includes("matikan senter") ||
+        command.includes("padamkan senter") ||
+        command.includes("senter mati")
+    ){
 
-message =
-"❌ Kamera membutuhkan HTTPS.";
+        await flashlight(false);
 
-}
+        return;
+    }
 
-statusBox.textContent =
-message;
 
-addLog(
-message,
-"red"
-);
+    /* TIME */
 
-}
+    if(
+        command.includes("jam berapa") ||
+        command.includes("sekarang jam berapa")
+    ){
 
-}
+        const now = new Date();
 
+        const time =
+            now.toLocaleTimeString(
+                "id-ID",
+                {
+                    hour:"2-digit",
+                    minute:"2-digit"
+                }
+            );
 
-/* ==================================================
-   DETECTION LOOP
-================================================== */
+        response(
+            "Sekarang pukul " + time
+        );
 
-function startDetection(){
+        return;
+    }
 
-stopDetection();
 
-detector =
-setInterval(
-detectFire,
-700
-);
+    /* GREETING */
 
-}
+    if(
+        command.includes("halo") ||
+        command.includes("hai") ||
+        command.includes("hello")
+    ){
 
+        response(
+            "Halo! Saya siap membantu. Silakan berikan perintah."
+        );
 
-function stopDetection(){
+        return;
+    }
 
-if(detector){
 
-clearInterval(detector);
+    /* HELP */
 
-detector = null;
+    if(
+        command.includes("bantuan") ||
+        command.includes("kamu bisa apa")
+    ){
 
-}
+        response(
+            "Saya bisa membuka WhatsApp, YouTube, Google, kamera, melakukan pencarian Google, membaca waktu, dan mencoba mengontrol senter jika perangkat mendukungnya."
+        );
 
-}
+        return;
+    }
 
 
-/* ==================================================
-   FIRE SCORE
-================================================== */
+    /* UNKNOWN COMMAND */
 
-function calculateScore(){
-
-if(
-!stream ||
-video.readyState < 2 ||
-!video.videoWidth
-){
-
-return 0;
-
-}
-
-
-const canvas =
-document.createElement("canvas");
-
-const width = 100;
-
-const height =
-Math.round(
-width *
-video.videoHeight /
-video.videoWidth
-);
-
-canvas.width = width;
-
-canvas.height = height;
-
-
-const ctx =
-canvas.getContext(
-"2d",
-{
-willReadFrequently:true
-}
-);
-
-ctx.drawImage(
-video,
-0,
-0,
-width,
-height
-);
-
-
-const data =
-ctx.getImageData(
-0,
-0,
-width,
-height
-).data;
-
-
-let firePixels = 0;
-
-let total = 0;
-
-
-for(
-let i=0;
-i<data.length;
-i+=4
-){
-
-const r = data[i];
-
-const g = data[i+1];
-
-const b = data[i+2];
-
-const brightness =
-(r+g+b)/3;
-
-
-const orange =
-r > 150 &&
-g > 40 &&
-g < 210 &&
-b < 130 &&
-r > g * 1.1;
-
-
-const yellow =
-r > 170 &&
-g > 90 &&
-b < 120;
-
-
-const red =
-r > 170 &&
-g < 130 &&
-b < 100 &&
-r > g * 1.3;
-
-
-const brightFire =
-r > 200 &&
-g > 80 &&
-g < 220 &&
-b < 150 &&
-brightness > 130;
-
-
-if(
-orange ||
-yellow ||
-red ||
-brightFire
-){
-
-firePixels++;
-
-}
-
-total++;
-
+    response(
+        "Maaf, saya belum memahami perintah tersebut."
+    );
 }
 
 
-const ratio =
-firePixels /
-Math.max(total,1);
+/* CAMERA */
 
+async function openCamera(){
 
-/*
-Skor mentah.
-*/
+    try{
 
-return Math.round(
-Math.min(
-100,
-ratio * 100
-)
-);
+        stream =
+            await navigator.mediaDevices.getUserMedia({
+                video:{
+                    facingMode:"environment"
+                }
+            });
 
+        videoTrack =
+            stream.getVideoTracks()[0];
+
+        const capabilities =
+            videoTrack.getCapabilities();
+
+        /*
+        Kamera berhasil diakses.
+        Browser akan meminta izin kamera.
+        */
+
+        if(capabilities.torch){
+
+            response(
+                "Kamera berhasil aktif. Perangkat mendukung kontrol senter."
+            );
+
+        }else{
+
+            response(
+                "Kamera berhasil aktif, tetapi browser tidak menyediakan kontrol senter."
+            );
+        }
+
+    }catch(error){
+
+        response(
+            "Saya tidak bisa mengakses kamera. Pastikan izin kamera sudah diberikan."
+        );
+
+        console.log(error);
+    }
 }
 
 
-/* ==================================================
-   DETECTION
-================================================== */
+/* FLASHLIGHT */
 
-function detectFire(){
+async function flashlight(state){
 
-const score =
-calculateScore();
+    try{
 
-scoreBox.textContent =
-score + "%";
+        /*
+        Jika kamera belum aktif,
+        kita minta akses kamera terlebih dahulu.
+        */
 
+        if(!videoTrack){
 
-/*
-Butuh beberapa frame supaya
-tidak langsung false alarm.
-*/
+            stream =
+                await navigator.mediaDevices.getUserMedia({
+                    video:{
+                        facingMode:"environment"
+                    }
+                });
 
-if(score >= 5){
+            videoTrack =
+                stream.getVideoTracks()[0];
+        }
 
-fireFrames++;
+        const capabilities =
+            videoTrack.getCapabilities();
 
-clearFrames = 0;
+        if(!capabilities.torch){
 
-}else{
+            response(
+                "Maaf, browser atau perangkat ini tidak menyediakan kontrol senter melalui website."
+            );
 
-clearFrames++;
+            return;
+        }
 
-fireFrames = 0;
+        await videoTrack.applyConstraints({
+            advanced:[
+                {
+                    torch:state
+                }
+            ]
+        });
 
+        if(state){
+
+            response(
+                "Senter berhasil dinyalakan."
+            );
+
+        }else{
+
+            response(
+                "Senter berhasil dimatikan."
+            );
+        }
+
+    }catch(error){
+
+        console.log(error);
+
+        response(
+            "Saya tidak bisa mengontrol senter dari browser ini. Pastikan izin kamera diberikan dan perangkat mendukung fitur tersebut."
+        );
+    }
 }
-
-
-/*
-API TERDETEKSI
-*/
-
-if(
-!fireActive &&
-fireFrames >= 3
-){
-
-triggerFire(score);
-
-}
-
-
-/*
-API PADAM
-*/
-
-if(
-fireActive &&
-clearFrames >= 8
-){
-
-extinguishFire();
-
-}
-
-}
-
-
-/* ==================================================
-   FIRE ALERT
-================================================== */
-
-function triggerFire(score){
-
-const nowMs = Date.now();
-
-
-if(
-nowMs - lastDetectionTime < 5000
-){
-
-return;
-
-}
-
-
-lastDetectionTime = nowMs;
-
-fireActive = true;
-
-eventCount++;
-
-
-/*
-STATISTIK
-*/
-
-eventsBox.textContent =
-eventCount;
-
-lastBox.textContent =
-getTime();
-
-scoreBox.textContent =
-score + "%";
-
-
-/*
-POPUP
-*/
-
-alertScore.textContent =
-score + "%";
-
-alertTime.textContent =
-new Date().toLocaleString("id-ID");
-
-overlay.classList.add("show");
-
-
-/*
-STATUS
-*/
-
-statusBox.classList.remove("safe");
-
-statusBox.classList.add("danger");
-
-statusBox.textContent =
-"🚨 API TERDETEKSI!";
-
-
-frame.classList.add("danger");
-
-
-/*
-LOG
-*/
-
-addLog(
-"🚨 API TERDETEKSI! Skor " +
-score + "%",
-"red"
-);
-
-
-/*
-VOICE
-*/
-
-speak(
-"Peringatan. Api terdeteksi di depan kamera."
-);
-
-}
-
-
-/* ==================================================
-   API PADAM
-================================================== */
-
-function extinguishFire(){
-
-if(!fireActive){
-
-return;
-
-}
-
-fireActive = false;
-
-statusBox.classList.remove("danger");
-
-statusBox.classList.add("safe");
-
-statusBox.textContent =
-"✅ Api sudah padam. Sistem kembali memantau.";
-
-frame.classList.remove("danger");
-
-addLog(
-"✅ Api sudah padam.",
-"green"
-);
-
-speak(
-"Api sudah padam. Sistem kembali memantau."
-);
-
-}
-
-
-/* ==================================================
-   SWITCH CAMERA
-================================================== */
-
-switchBtn.addEventListener(
-"click",
-async function(){
-
-if(!navigator.mediaDevices){
-
-return;
-
-}
-
-
-/*
-Kalau kamera belum aktif,
-cukup ganti mode untuk kamera
-berikutnya.
-*/
-
-cameraMode =
-cameraMode === "user"
-?
-"environment"
-:
-"user";
-
-
-if(!stream){
-
-setMirror();
-
-addLog(
-cameraMode === "user"
-?
-"Mode kamera depan dipilih."
-:
-"Mode kamera belakang dipilih.",
-"green"
-);
-
-return;
-
-}
-
-
-stopDetection();
-
-
-stream
-.getTracks()
-.forEach(
-track =>
-track.stop()
-);
-
-
-try{
-
-const newStream =
-await navigator.mediaDevices.getUserMedia({
-
-video:{
-facingMode:{
-exact:cameraMode
-}
-},
-
-audio:false
-
-});
-
-
-stream = newStream;
-
-video.srcObject = stream;
-
-await video.play();
-
-setMirror();
-
-torch = false;
-
-flashBtn.textContent =
-"🔦 Nyalakan Flash";
-
-fireActive = false;
-
-fireFrames = 0;
-
-clearFrames = 0;
-
-frame.classList.remove("danger");
-
-statusBox.classList.remove("danger");
-
-statusBox.classList.remove("safe");
-
-statusBox.textContent =
-"🔄 Kamera berhasil diubah.";
-
-addLog(
-cameraMode === "user"
-?
-"🔄 Kamera depan aktif."
-:
-"🔄 Kamera belakang aktif.",
-"green"
-);
-
-startDetection();
-
-
-}catch(error){
-
-console.error(error);
-
-addLog(
-"❌ Gagal mengganti kamera.",
-"red"
-);
-
-statusBox.textContent =
-"❌ Kamera tidak dapat diubah.";
-
-}
-
-}
-);
-
-
-/* ==================================================
-   FLASH
-================================================== */
-
-flashBtn.addEventListener(
-"click",
-async function(){
-
-if(!stream){
-
-statusBox.textContent =
-"Nyalakan kamera terlebih dahulu.";
-
-return;
-
-}
-
-
-const track =
-stream.getVideoTracks()[0];
-
-
-if(
-!track ||
-!track.getCapabilities
-){
-
-statusBox.textContent =
-"⚠️ Flash tidak tersedia.";
-
-return;
-
-}
-
-
-const caps =
-track.getCapabilities();
-
-
-if(!caps.torch){
-
-statusBox.textContent =
-"⚠️ Flash tidak didukung perangkat/browser ini.";
-
-addLog(
-"Flash tidak tersedia.",
-"red"
-);
-
-return;
-
-}
-
-
-try{
-
-torch = !torch;
-
-await track.applyConstraints({
-
-advanced:[
-{
-torch:torch
-}
-]
-
-});
-
-
-flashBtn.textContent =
-torch
-?
-"🔦 Matikan Flash"
-:
-"🔦 Nyalakan Flash";
-
-
-statusBox.textContent =
-torch
-?
-"🔦 Flash menyala."
-:
-"🔦 Flash dimatikan.";
-
-}catch(error){
-
-console.error(error);
-
-statusBox.textContent =
-"❌ Flash tidak dapat digunakan.";
-
-}
-
-}
-);
-
-
-/* ==================================================
-   STOP CAMERA
-================================================== */
-
-stopBtn.addEventListener(
-"click",
-function(){
-
-stopDetection();
-
-
-if(stream){
-
-stream
-.getTracks()
-.forEach(
-track =>
-track.stop()
-);
-
-}
-
-
-stream = null;
-
-video.srcObject = null;
-
-placeholder.style.display =
-"grid";
-
-startBtn.disabled = false;
-
-stopBtn.disabled = true;
-
-setOnline(false);
-
-torch = false;
-
-fireActive = false;
-
-fireFrames = 0;
-
-clearFrames = 0;
-
-scoreBox.textContent = "0%";
-
-frame.classList.remove("danger");
-
-statusBox.classList.remove("danger");
-
-statusBox.classList.remove("safe");
-
-statusBox.textContent =
-"Kamera dimatikan.";
-
-addLog(
-"Kamera dimatikan."
-);
-
-}
-);
-
-
-/* ==================================================
-   START BUTTON
-================================================== */
-
-startBtn.addEventListener(
-"click",
-function(){
-
-startCamera();
-
-}
-);
-
-
-/* ==================================================
-   CLOSE ALERT
-================================================== */
-
-closeBtn.addEventListener(
-"click",
-function(){
-
-overlay.classList.remove("show");
-
-}
-);
-
-
-/* ==================================================
-   INITIAL
-================================================== */
-
-setOnline(false);
-
-addLog(
-"Aplikasi siap digunakan."
-);
-
-addLog(
-"Kamera depan adalah kamera awal."
-);
-
 </script>
 
 </body>
