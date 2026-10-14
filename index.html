@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -147,6 +148,8 @@ const appScreen = $("appScreen");
 let user = null;
 let authMode = "login";
 let currentPage = "dashboard";
+let transactionWalletFilter = "all";
+let reportWalletFilter = "all";
 let data = freshData();
 
 function makeId() {
@@ -414,8 +417,9 @@ async function saveData(showError = false) {
   }
 }
 
-function changePage(page) {
+function changePage(page, walletFilter = null) {
   currentPage = page;
+  if (page === "transactions" && walletFilter) transactionWalletFilter = walletFilter;
   $("mainMenu").classList.add("hidden");
   $("menuButton").setAttribute("aria-expanded", "false");
   renderPage();
@@ -557,47 +561,70 @@ function goalSummary(g) {
   </div>`;
 }
 
+function walletTotals(walletId) {
+  const list = data.transactions.filter(t => t.walletId === walletId);
+  const income = list.filter(t => t.type === "income").reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  const expense = list.filter(t => t.type === "expense").reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  return { income, expense, net: income - expense, count: list.length };
+}
+
 function renderDashboard() {
-  const t = totals();
+  const all = totals();
   const recent = [...data.transactions]
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
     .slice(0, 5);
 
-  main.innerHTML = heading("Dashboard", "Ringkasan kondisi keuanganmu hari ini.") + `
+  const walletCards = data.wallets.map(w => {
+    const wt = walletTotals(w.id);
+    const recentWalletTx = data.transactions
+      .filter(t => t.walletId === w.id)
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+      .slice(0, 3);
+
+    return `<section class="card span-6">
+      <div class="card-head">
+        <div><div class="stat-label">Ringkasan dompet</div><h3>${escapeHtml(w.name)}</h3></div>
+        <span class="pill">${wt.count} transaksi</span>
+      </div>
+      <div class="stat-label">Saldo dompet</div>
+      <div class="stat-value">${rupiah(walletBalance(w))}</div>
+      <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px">
+        <div class="card" style="padding:13px;background:#142b27">
+          <div class="stat-label">Pemasukan</div>
+          <div class="amount-in" style="font-size:16px;font-weight:800;overflow-wrap:anywhere">${rupiah(wt.income)}</div>
+        </div>
+        <div class="card" style="padding:13px;background:#34212b">
+          <div class="stat-label">Pengeluaran</div>
+          <div class="amount-out" style="font-size:16px;font-weight:800;overflow-wrap:anywhere">${rupiah(wt.expense)}</div>
+        </div>
+      </div>
+      <div class="item-meta" style="margin-top:12px">Saldo awal: ${rupiah(w.balance || 0)} · Arus kas: ${rupiah(wt.net)}</div>
+      <div class="card-head" style="margin-top:18px;margin-bottom:6px"><h3>Transaksi dompet ini</h3><button class="text-button" data-page="transactions" data-wallet-filter="${escapeHtml(w.id)}">Lihat →</button></div>
+      ${recentWalletTx.length ? recentWalletTx.map(x => txRow(x)).join("") : `<div class="empty">Belum ada transaksi untuk dompet ini.</div>`}
+    </section>`;
+  }).join("");
+
+  main.innerHTML = heading("Dashboard", "Setiap dompet memiliki saldo, pemasukan, pengeluaran, dan riwayatnya sendiri.") + `
   <div class="grid">
-    <section class="card span-3">
-      <div class="stat-label">Total saldo</div>
-      <div class="stat-value">${rupiah(totalBalance())}</div>
-      <div class="stat-foot">Gabungan semua dompet</div>
+    <section class="card span-3"><div class="stat-label">Total saldo semua dompet</div><div class="stat-value">${rupiah(totalBalance())}</div><div class="stat-foot">Gabungan saldo seluruh dompet</div></section>
+    <section class="card span-3"><div class="stat-label">Total pemasukan</div><div class="stat-value amount-in">${rupiah(all.income)}</div><div class="stat-foot">Gabungan semua dompet</div></section>
+    <section class="card span-3"><div class="stat-label">Total pengeluaran</div><div class="stat-value amount-out">${rupiah(all.expense)}</div><div class="stat-foot">Gabungan semua dompet</div></section>
+    <section class="card span-3"><div class="stat-label">Arus kas bersih</div><div class="stat-value">${rupiah(all.net)}</div><div class="stat-foot">Pemasukan dikurangi pengeluaran</div></section>
+
+    <section class="span-12">
+      <div class="card-head" style="margin:8px 0 14px"><h3>Ringkasan tiap dompet</h3><button class="text-button" data-page="wallets">+ Kelola dompet</button></div>
+      <div class="grid">${walletCards || `<section class="card span-12"><div class="empty">Belum ada dompet. Tambahkan dompet terlebih dahulu.</div></section>`}</div>
     </section>
-    <section class="card span-3">
-      <div class="stat-label">Total pemasukan</div>
-      <div class="stat-value amount-in">${rupiah(t.income)}</div>
-      <div class="stat-foot">Semua transaksi pemasukan</div>
-    </section>
-    <section class="card span-3">
-      <div class="stat-label">Total pengeluaran</div>
-      <div class="stat-value amount-out">${rupiah(t.expense)}</div>
-      <div class="stat-foot">Semua transaksi pengeluaran</div>
-    </section>
-    <section class="card span-3">
-      <div class="stat-label">Arus kas bersih</div>
-      <div class="stat-value">${rupiah(t.net)}</div>
-      <div class="stat-foot">Pemasukan dikurangi pengeluaran</div>
-    </section>
+
     <section class="card span-7">
-      <div class="card-head"><h3>Transaksi terbaru</h3><button class="text-button" data-page="transactions">Lihat semua →</button></div>
+      <div class="card-head"><h3>Transaksi terbaru dari semua dompet</h3><button class="text-button" data-page="transactions">Lihat semua →</button></div>
       ${recent.length ? recent.map(x => txRow(x)).join("") : `<div class="empty">Belum ada transaksi. Tambahkan transaksi pertamamu dari menu Transaksi.</div>`}
     </section>
     <section class="card span-5">
-      <div class="card-head"><h3>Saldo dompet</h3><button class="text-button" data-page="wallets">Kelola →</button></div>
-      ${data.wallets.length ? data.wallets.map(w => `<div class="item"><div class="item-name">${escapeHtml(w.name)}</div><b>${rupiah(walletBalance(w))}</b></div>`).join("") : `<div class="empty">Belum ada dompet.</div>`}
-    </section>
-    <section class="card span-6">
       <div class="card-head"><h3>Anggaran</h3><button class="text-button" data-page="budgets">Kelola →</button></div>
       ${data.budgets.length ? data.budgets.slice(0, 4).map(b => budgetSummary(b)).join("") : `<div class="empty">Buat anggaran untuk mengontrol pengeluaran.</div>`}
     </section>
-    <section class="card span-6">
+    <section class="card span-12">
       <div class="card-head"><h3>Target tabungan</h3><button class="text-button" data-page="goals">Kelola →</button></div>
       ${data.goals.length ? data.goals.slice(0, 4).map(g => goalSummary(g)).join("") : `<div class="empty">Buat target tabungan pertamamu.</div>`}
     </section>
@@ -647,6 +674,10 @@ function renderTransactions() {
           <option value="income">Pemasukan</option>
           <option value="expense">Pengeluaran</option>
         </select>
+        <select id="txWalletFilter">
+          <option value="all">Semua dompet</option>
+          ${data.wallets.map(w => `<option value="${escapeHtml(w.id)}" ${transactionWalletFilter === w.id ? "selected" : ""}>${escapeHtml(w.name)}</option>`).join("")}
+        </select>
       </div>
       <div id="txList">${txListHtml()}</div>
     </section>
@@ -685,6 +716,11 @@ function renderTransactions() {
 
   $("txSearch").addEventListener("input", renderTxListInto);
   $("txFilter").addEventListener("change", renderTxListInto);
+  $("txWalletFilter").addEventListener("change", () => {
+    transactionWalletFilter = $("txWalletFilter").value;
+    renderTxListInto();
+  });
+  renderTxListInto();
 }
 
 function txListHtml() {
@@ -697,9 +733,10 @@ function txListHtml() {
 function renderTxListInto() {
   const q = $("txSearch").value.toLowerCase();
   const type = $("txFilter").value;
+  const walletId = $("txWalletFilter").value;
 
   const list = [...data.transactions]
-    .filter(t => (type === "all" || t.type === type) && (`${t.name} ${t.category}`.toLowerCase().includes(q)))
+    .filter(t => (type === "all" || t.type === type) && (walletId === "all" || t.walletId === walletId) && (`${t.name} ${t.category}`.toLowerCase().includes(q)))
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
   $("txList").innerHTML = list.length
@@ -877,37 +914,40 @@ function renderGoals() {
 }
 
 function renderReports() {
-  const t = totals();
+  const txForReport = data.transactions.filter(x => reportWalletFilter === "all" || x.walletId === reportWalletFilter);
+  const income = txForReport.filter(x => x.type === "income").reduce((s, x) => s + Number(x.amount || 0), 0);
+  const expense = txForReport.filter(x => x.type === "expense").reduce((s, x) => s + Number(x.amount || 0), 0);
+  const t = { income, expense, net: income - expense };
   const monthly = {};
 
-  data.transactions.forEach(x => {
+  txForReport.forEach(x => {
     const m = (x.date || "").slice(0, 7) || "Tanpa tanggal";
     if (!monthly[m]) monthly[m] = { income: 0, expense: 0 };
-    monthly[m][x.type] += Number(x.amount);
+    monthly[m][x.type] += Number(x.amount || 0);
   });
 
   const months = Object.keys(monthly).sort().slice(-6);
   const max = Math.max(1, ...months.flatMap(m => [monthly[m].income, monthly[m].expense]));
   const categories = {};
 
-  data.transactions.filter(x => x.type === "expense").forEach(x => {
-    categories[x.category || "Lainnya"] = (categories[x.category || "Lainnya"] || 0) + Number(x.amount);
+  txForReport.filter(x => x.type === "expense").forEach(x => {
+    categories[x.category || "Lainnya"] = (categories[x.category || "Lainnya"] || 0) + Number(x.amount || 0);
   });
 
-  main.innerHTML = heading("Laporan", "Lihat ringkasan arus kas dan aktivitas keuangan.") + `
+  main.innerHTML = heading("Laporan", "Lihat laporan gabungan atau pilih satu dompet agar datanya tidak tercampur.") + `
   <div class="grid">
-    <section class="card span-4">
-      <div class="stat-label">Total pemasukan</div>
-      <div class="stat-value amount-in">${rupiah(t.income)}</div>
+    <section class="card span-12">
+      <div class="field" style="max-width:360px;margin:0">
+        <label for="reportWalletFilter">Laporan untuk dompet</label>
+        <select id="reportWalletFilter">
+          <option value="all" ${reportWalletFilter === "all" ? "selected" : ""}>Semua dompet</option>
+          ${data.wallets.map(w => `<option value="${escapeHtml(w.id)}" ${reportWalletFilter === w.id ? "selected" : ""}>${escapeHtml(w.name)}</option>`).join("")}
+        </select>
+      </div>
     </section>
-    <section class="card span-4">
-      <div class="stat-label">Total pengeluaran</div>
-      <div class="stat-value amount-out">${rupiah(t.expense)}</div>
-    </section>
-    <section class="card span-4">
-      <div class="stat-label">Arus kas bersih</div>
-      <div class="stat-value">${rupiah(t.net)}</div>
-    </section>
+    <section class="card span-4"><div class="stat-label">Total pemasukan</div><div class="stat-value amount-in">${rupiah(t.income)}</div></section>
+    <section class="card span-4"><div class="stat-label">Total pengeluaran</div><div class="stat-value amount-out">${rupiah(t.expense)}</div></section>
+    <section class="card span-4"><div class="stat-label">Arus kas bersih</div><div class="stat-value">${rupiah(t.net)}</div></section>
     <section class="card span-12">
       <div class="card-head"><h3>Arus kas per bulan</h3><span class="pill">6 bulan terakhir</span></div>
       ${months.length ? `
@@ -922,20 +962,25 @@ function renderReports() {
             </div>`).join("")}
         </div>
         <div class="row small muted"><span>🟢 Pemasukan</span><span>🔴 Pengeluaran</span></div>
-      ` : `<div class="empty">Tambahkan transaksi untuk melihat laporan.</div>`}
+      ` : `<div class="empty">Belum ada transaksi untuk pilihan dompet ini.</div>`}
     </section>
     <section class="card span-6">
       <div class="card-head"><h3>Pengeluaran per kategori</h3></div>
       ${Object.keys(categories).length
         ? Object.entries(categories).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="item"><span>${escapeHtml(k)}</span><b>${rupiah(v)}</b></div>`).join("")
-        : `<div class="empty">Belum ada pengeluaran.</div>`}
+        : `<div class="empty">Belum ada pengeluaran untuk pilihan dompet ini.</div>`}
     </section>
     <section class="card span-6">
       <div class="card-head"><h3>Ekspor laporan</h3></div>
-      <p class="subtle">Unduh transaksi untuk dibuka di spreadsheet.</p>
+      <p class="subtle">Ekspor CSV berisi seluruh transaksi. Untuk laporan terfilter, gunakan pilihan dompet di atas.</p>
       <button class="primary" data-action="export-csv">Ekspor CSV</button>
     </section>
   </div>`;
+
+  $("reportWalletFilter").addEventListener("change", () => {
+    reportWalletFilter = $("reportWalletFilter").value;
+    renderReports();
+  });
 }
 
 function renderSettings() {
@@ -1025,7 +1070,7 @@ function exportJSON() {
 main.addEventListener("click", async e => {
   const page = e.target.closest("[data-page]");
   if (page) {
-    changePage(page.dataset.page);
+    changePage(page.dataset.page, page.dataset.walletFilter || null);
     return;
   }
 
@@ -1070,7 +1115,7 @@ main.addEventListener("click", async e => {
       break;
 
     case "delete-goal":
-      if (confirm("Hapus target tabungan ini?")) {
+      if (confirm("Hapus target ini?")) {
         data.goals = data.goals.filter(x => x.id !== id);
         await saveData(true);
         renderPage();
