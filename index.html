@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -154,440 +153,997 @@ function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() :
     Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
+
 function freshData() {
-  return {transactions:[],wallets:[{id:makeId(),name:"Dompet utama",balance:0}],budgets:[],goals:[]};
+  return {
+    transactions: [],
+    wallets: [{ id: makeId(), name: "Dompet utama", balance: 0 }],
+    budgets: [],
+    goals: []
+  };
 }
+
 function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
 }
+
 function rupiah(n) {
-  return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0
+  }).format(Number(n) || 0);
 }
+
 function today() {
-  const d=new Date();
+  const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
+
 function dateLabel(date) {
-  return date ? new Date(date+"T12:00:00").toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"}) : "-";
+  return date
+    ? new Date(date + "T12:00:00").toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      })
+    : "-";
 }
-function notice(el,message,type="") {
-  el.innerHTML=`<div class="notice ${type}">${escapeHtml(message)}</div>`;
+
+function notice(el, message, type = "") {
+  el.innerHTML = `<div class="notice ${type}">${escapeHtml(message)}</div>`;
 }
-function clearNotice(el){el.innerHTML="";}
+
+function clearNotice(el) {
+  el.innerHTML = "";
+}
 
 /* Nominal: keyboard angka, pemisah ribuan otomatis. */
 function getNominal(value) {
-  return Number(String(value ?? "").replace(/\D/g,"")) || 0;
+  return Number(String(value ?? "").replace(/\D/g, "")) || 0;
 }
+
 function formatNominalInput(input) {
-  const digits=input.value.replace(/\D/g,"");
-  input.value=digits ? Number(digits).toLocaleString("id-ID") : "";
+  const digits = input.value.replace(/\D/g, "");
+  input.value = digits ? Number(digits).toLocaleString("id-ID") : "";
 }
-function setupNominalInputs(root=document) {
-  root.querySelectorAll("input[data-nominal]").forEach(input=>{
-    if(input.dataset.nominalReady) return;
-    input.dataset.nominalReady="1";
-    input.setAttribute("inputmode","numeric");
-    input.setAttribute("autocomplete","off");
-    input.addEventListener("input",()=>formatNominalInput(input));
-    if(input.value) formatNominalInput(input);
+
+function setupNominalInputs(root = document) {
+  root.querySelectorAll("input[data-nominal]").forEach(input => {
+    if (input.dataset.nominalReady) return;
+    input.dataset.nominalReady = "1";
+    input.setAttribute("inputmode", "numeric");
+    input.setAttribute("autocomplete", "off");
+    input.addEventListener("input", () => formatNominalInput(input));
+    if (input.value) formatNominalInput(input);
   });
 }
-function nominalInput(name,label,value="",required=true) {
-  return `<div class="field"><label>${escapeHtml(label)}</label><input name="${escapeHtml(name)}" type="text" data-nominal inputmode="numeric" pattern="[0-9.]*" value="${escapeHtml(value)}" placeholder="0" ${required?"required":""}></div>`;
+
+function nominalInput(name, label, value = "", required = true) {
+  return `<div class="field"><label>${escapeHtml(label)}</label><input name="${escapeHtml(name)}" type="text" data-nominal inputmode="numeric" pattern="[0-9.]*" value="${escapeHtml(value)}" placeholder="0" ${required ? "required" : ""}></div>`;
 }
-function refreshNominals() { setupNominalInputs(main); }
+
+function refreshNominals() {
+  setupNominalInputs(main);
+}
 
 function setAuthMode(mode) {
-  authMode=mode;
-  const reg=mode==="register";
-  $("authTitle").textContent=reg?"Buat akun Finora":"Selamat datang";
-  $("authDescription").textContent=reg?"Daftar untuk mulai mengatur keuanganmu.":"Masuk untuk melanjutkan ke dashboard keuanganmu.";
-  $("authSubmit").textContent=reg?"Daftar akun":"Masuk";
-  $("confirmPasswordField").classList.toggle("hidden",!reg);
-  $("confirmPassword").required=reg;
-  $("toggleAuth").textContent=reg?"Sudah punya akun? Masuk":"Belum punya akun? Daftar";
-  $("forgotPassword").classList.toggle("hidden",reg);
+  authMode = mode;
+  const reg = mode === "register";
+  $("authTitle").textContent = reg ? "Buat akun Finora" : "Selamat datang";
+  $("authDescription").textContent = reg
+    ? "Daftar untuk mulai mengatur keuanganmu."
+    : "Masuk untuk melanjutkan ke dashboard keuanganmu.";
+  $("authSubmit").textContent = reg ? "Daftar akun" : "Masuk";
+  $("confirmPasswordField").classList.toggle("hidden", !reg);
+  $("confirmPassword").required = reg;
+  $("toggleAuth").textContent = reg ? "Sudah punya akun? Masuk" : "Belum punya akun? Daftar";
+  $("forgotPassword").classList.toggle("hidden", reg);
   clearNotice($("authNotice"));
 }
-$("toggleAuth").addEventListener("click",()=>setAuthMode(authMode==="login"?"register":"login"));
+
+$("toggleAuth").addEventListener("click", () =>
+  setAuthMode(authMode === "login" ? "register" : "login")
+);
 
 function readableError(error) {
-  const msg=error?.message||"Terjadi kesalahan. Silakan coba lagi.";
-  if(/email not confirmed/i.test(msg)) return "Email belum diverifikasi. Periksa inbox atau folder Spam, klik tautan verifikasi, lalu login kembali.";
-  if(/invalid login credentials/i.test(msg)) return "Email atau kata sandi salah. Pastikan email sudah diverifikasi.";
-  if(/user already registered/i.test(msg)) return "Email ini sudah terdaftar. Silakan masuk atau verifikasi email terlebih dahulu.";
-  if(/password should be at least/i.test(msg)) return "Kata sandi terlalu pendek. Gunakan minimal 6 karakter.";
+  const msg = error?.message || "Terjadi kesalahan. Silakan coba lagi.";
+  if (/email not confirmed/i.test(msg)) return "Email belum diverifikasi. Periksa inbox atau folder Spam, klik tautan verifikasi, lalu login kembali.";
+  if (/invalid login credentials/i.test(msg)) return "Email atau kata sandi salah. Pastikan email sudah diverifikasi.";
+  if (/user already registered/i.test(msg)) return "Email ini sudah terdaftar. Silakan masuk atau verifikasi email terlebih dahulu.";
+  if (/password should be at least/i.test(msg)) return "Kata sandi terlalu pendek. Gunakan minimal 6 karakter.";
   return msg;
 }
 
-$("authForm").addEventListener("submit",async e=>{
+$("authForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const email=$("authEmail").value.trim();
-  const password=$("authPassword").value;
-  const submit=$("authSubmit");
+
+  const email = $("authEmail").value.trim();
+  const password = $("authPassword").value;
+  const submit = $("authSubmit");
+
   clearNotice($("authNotice"));
-  if(authMode==="register"&&password!==$("confirmPassword").value){
-    notice($("authNotice"),"Kata sandi dan konfirmasi kata sandi tidak sama.","error");return;
+
+  if (authMode === "register" && password !== $("confirmPassword").value) {
+    notice($("authNotice"), "Kata sandi dan konfirmasi kata sandi tidak sama.", "error");
+    return;
   }
-  submit.disabled=true;submit.textContent="Memproses...";
-  try{
-    if(authMode==="register"){
-      const {data:result,error}=await supabase.auth.signUp({
-        email,password,options:{emailRedirectTo:window.location.origin}
+
+  submit.disabled = true;
+  submit.textContent = "Memproses...";
+
+  try {
+    if (authMode === "register") {
+      const { data: result, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin }
       });
-      if(error)throw error;
-      $("authPassword").value="";$("confirmPassword").value="";
-      setAuthMode("login");$("authEmail").value=email;
-      if(result.session){
-        notice($("authNotice"),"Pendaftaran berhasil. Akun sudah aktif, silakan login.","success");
-      }else{
-        notice($("authNotice"),"Pendaftaran berhasil! Periksa email Anda untuk verifikasi akun. Klik tautan verifikasi di email, lalu kembali ke Finora dan login menggunakan email serta kata sandi yang sama.","success");
+
+      if (error) throw error;
+
+      $("authPassword").value = "";
+      $("confirmPassword").value = "";
+      setAuthMode("login");
+      $("authEmail").value = email;
+
+      if (result.session) {
+        notice($("authNotice"), "Pendaftaran berhasil. Akun sudah aktif, silakan login.", "success");
+      } else {
+        notice(
+          $("authNotice"),
+          "Pendaftaran berhasil! Periksa email Anda untuk verifikasi akun. Klik tautan verifikasi di email, lalu kembali ke Finora dan login menggunakan email serta kata sandi yang sama.",
+          "success"
+        );
       }
-    }else{
-      const {data:result,error}=await supabase.auth.signInWithPassword({email,password});
-      if(error)throw error;
-      user=result.user;await boot();
+    } else {
+      const { data: result, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      user = result.user;
+      await boot();
     }
-  }catch(error){notice($("authNotice"),readableError(error),"error");}
-  finally{submit.disabled=false;submit.textContent=authMode==="register"?"Daftar akun":"Masuk";}
+  } catch (error) {
+    notice($("authNotice"), readableError(error), "error");
+  } finally {
+    submit.disabled = false;
+    submit.textContent = authMode === "register" ? "Daftar akun" : "Masuk";
+  }
 });
 
-$("forgotPassword").addEventListener("click",async()=>{
-  const email=$("authEmail").value.trim();
-  if(!email){notice($("authNotice"),"Masukkan email terlebih dahulu.","error");return;}
-  try{
-    const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin});
-    if(error)throw error;
-    notice($("authNotice"),"Jika email terdaftar, tautan pemulihan akan dikirim. Periksa inbox dan folder Spam.","success");
-  }catch(error){notice($("authNotice"),readableError(error),"error");}
+$("forgotPassword").addEventListener("click", async () => {
+  const email = $("authEmail").value.trim();
+
+  if (!email) {
+    notice($("authNotice"), "Masukkan email terlebih dahulu.", "error");
+    return;
+  }
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin
+    });
+
+    if (error) throw error;
+
+    notice(
+      $("authNotice"),
+      "Jika email terdaftar, tautan pemulihan akan dikirim. Periksa inbox dan folder Spam.",
+      "success"
+    );
+  } catch (error) {
+    notice($("authNotice"), readableError(error), "error");
+  }
 });
 
-async function boot(){
-  if(!user){authScreen.classList.remove("hidden");appScreen.classList.add("hidden");return;}
-  $("userEmail").textContent=user.email||"";
-  authScreen.classList.add("hidden");appScreen.classList.remove("hidden");
-  await loadData();renderPage();
+async function boot() {
+  if (!user) {
+    authScreen.classList.remove("hidden");
+    appScreen.classList.add("hidden");
+    return;
+  }
+
+  $("userEmail").textContent = user.email || "";
+  authScreen.classList.add("hidden");
+  appScreen.classList.remove("hidden");
+
+  await loadData();
+  renderPage();
 }
-async function loadData(){
-  try{
-    const {data:row,error}=await supabase.from("finora_data").select("payload").eq("user_id",user.id).maybeSingle();
-    if(error)throw error;
-    if(row?.payload){
-      const p=row.payload;
-      data={
-        transactions:Array.isArray(p.transactions)?p.transactions:[],
-        wallets:Array.isArray(p.wallets)?p.wallets:[],
-        budgets:Array.isArray(p.budgets)?p.budgets:[],
-        goals:Array.isArray(p.goals)?p.goals:[]
+
+async function loadData() {
+  try {
+    const { data: row, error } = await supabase
+      .from("finora_data")
+      .select("payload")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (row?.payload) {
+      const p = row.payload;
+
+      data = {
+        transactions: Array.isArray(p.transactions) ? p.transactions : [],
+        wallets: Array.isArray(p.wallets) ? p.wallets : [],
+        budgets: Array.isArray(p.budgets) ? p.budgets : [],
+        goals: Array.isArray(p.goals) ? p.goals : []
       };
-    }else{data=freshData();await saveData(true);}
-  }catch(error){
+
+      // Pastikan akun yang datanya belum memiliki dompet tetap mendapat dompet utama.
+      if (data.wallets.length === 0) {
+        data.wallets = [{ id: makeId(), name: "Dompet utama", balance: 0 }];
+        await saveData(true);
+      }
+    } else {
+      data = freshData();
+      await saveData(true);
+    }
+  } catch (error) {
     console.error(error);
-    alert("Data gagal dimuat. Periksa koneksi dan pengaturan Supabase: "+error.message);
-    data=freshData();
+    alert("Data gagal dimuat. Periksa koneksi dan pengaturan Supabase: " + error.message);
+    data = freshData();
   }
 }
-async function saveData(showError=false){
-  if(!user)return;
-  try{
-    const {error}=await supabase.from("finora_data").upsert({
-      user_id:user.id,payload:data,updated_at:new Date().toISOString()
-    },{onConflict:"user_id"});
-    if(error)throw error;
-  }catch(error){console.error(error);if(showError)alert("Data gagal disimpan: "+error.message);}
+
+async function saveData(showError = false) {
+  if (!user) return;
+
+  try {
+    const { error } = await supabase.from("finora_data").upsert({
+      user_id: user.id,
+      payload: data,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "user_id" });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error(error);
+    if (showError) alert("Data gagal disimpan: " + error.message);
+  }
 }
 
-function changePage(page){
-  currentPage=page;$("mainMenu").classList.add("hidden");
-  $("menuButton").setAttribute("aria-expanded","false");renderPage();
+function changePage(page) {
+  currentPage = page;
+  $("mainMenu").classList.add("hidden");
+  $("menuButton").setAttribute("aria-expanded", "false");
+  renderPage();
 }
-$("menuButton").addEventListener("click",()=>{
-  const menu=$("mainMenu");menu.classList.toggle("hidden");
-  $("menuButton").setAttribute("aria-expanded",String(!menu.classList.contains("hidden")));
+
+$("menuButton").addEventListener("click", () => {
+  const menu = $("mainMenu");
+  menu.classList.toggle("hidden");
+  $("menuButton").setAttribute("aria-expanded", String(!menu.classList.contains("hidden")));
 });
-document.addEventListener("click",e=>{
-  if(!e.target.closest(".menu-wrap")){
-    $("mainMenu").classList.add("hidden");$("menuButton").setAttribute("aria-expanded","false");
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".menu-wrap")) {
+    $("mainMenu").classList.add("hidden");
+    $("menuButton").setAttribute("aria-expanded", "false");
   }
 });
-$("mainMenu").addEventListener("click",e=>{
-  const btn=e.target.closest("[data-page]");if(btn)changePage(btn.dataset.page);
-});
-$("signOutButton").addEventListener("click",async()=>{
-  const {error}=await supabase.auth.signOut();if(error)alert(error.message);
+
+$("mainMenu").addEventListener("click", e => {
+  const btn = e.target.closest("[data-page]");
+  if (btn) changePage(btn.dataset.page);
 });
 
-function heading(title,subtitle){
+$("signOutButton").addEventListener("click", async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) alert(error.message);
+});
+
+function heading(title, subtitle) {
   return `<h1 class="page-title">${escapeHtml(title)}</h1><p class="page-subtitle">${escapeHtml(subtitle)}</p>`;
 }
-function walletOptions(selected=""){
-  return data.wallets.map(w=>`<option value="${escapeHtml(w.id)}" ${w.id===selected?"selected":""}>${escapeHtml(w.name)}</option>`).join("");
-}
-function categoryOptions(selected="Makanan"){
-  return ["Makanan","Transportasi","Belanja","Tagihan","Gaji","Bisnis","Hiburan","Kesehatan","Pendidikan","Tabungan","Lainnya"].map(c=>`<option ${c===selected?"selected":""}>${c}</option>`).join("");
-}
-function totals(){
-  const income=data.transactions.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.amount),0);
-  const expense=data.transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.amount),0);
-  return {income,expense,net:income-expense};
-}
-function walletBalance(w){
-  return Number(w.balance||0)+data.transactions.filter(t=>t.walletId===w.id).reduce((s,t)=>s+(t.type==="income"?1:-1)*Number(t.amount),0);
-}
-function totalBalance(){return data.wallets.reduce((s,w)=>s+walletBalance(w),0);}
-function txRow(t,withDelete=false){
-  const w=data.wallets.find(x=>x.id===t.walletId);
-  return `<div class="item"><div class="item-main"><div class="item-name">${escapeHtml(t.name)}</div><div class="item-meta">${escapeHtml(t.category||"Lainnya")} · ${dateLabel(t.date)}${w?" · "+escapeHtml(w.name):""}</div></div><div class="item-right"><div class="${t.type==="income"?"amount-in":"amount-out"}" style="font-weight:750">${t.type==="income"?"+":"−"}${rupiah(t.amount)}</div>${withDelete?`<button class="text-button small" data-action="delete-tx" data-id="${escapeHtml(t.id)}">Hapus</button>`:""}</div></div>`;
-}
-function renderPage(){
-  const pages={dashboard:renderDashboard,transactions:renderTransactions,wallets:renderWallets,budgets:renderBudgets,goals:renderGoals,reports:renderReports,settings:renderSettings};
-  (pages[currentPage]||renderDashboard)();
-  refreshNominals();
-}
-function budgetSpent(b){
-  return data.transactions.filter(t=>t.type==="expense"&&t.category===b.category&&(!b.month||t.date?.startsWith(b.month))).reduce((s,t)=>s+Number(t.amount),0);
-}
-function budgetSummary(b){
-  const spent=budgetSpent(b),limit=Number(b.limit)||0,pct=limit?Math.min(100,spent/limit*100):0;
-  return `<div class="item-main"><div class="row"><div class="item-name">${escapeHtml(b.category)}</div><span class="small muted">${Math.round(pct)}%</span></div><div class="progress"><div style="width:${pct}%"></div></div><div class="item-meta">${rupiah(spent)} dari ${rupiah(limit)}</div></div>`;
-}
-function goalSummary(g){
-  const target=Number(g.target)||0,saved=Number(g.saved)||0,pct=target?Math.min(100,saved/target*100):0;
-  return `<div class="item-main"><div class="row"><div class="item-name">${escapeHtml(g.name)}</div><span class="small muted">${Math.round(pct)}%</span></div><div class="progress"><div style="width:${pct}%"></div></div><div class="item-meta">${rupiah(saved)} dari ${rupiah(target)}${g.deadline?" · Target "+dateLabel(g.deadline):""}</div></div>`;
+
+/* Pilihan dompet otomatis mengikuti semua dompet milik user. */
+function walletOptions(selected = "") {
+  if (!Array.isArray(data.wallets) || data.wallets.length === 0) {
+    return `<option value="">Belum ada dompet — buat dompet terlebih dahulu</option>`;
+  }
+
+  const selectedId = data.wallets.some(w => w.id === selected)
+    ? selected
+    : data.wallets[0].id;
+
+  return data.wallets.map(w =>
+    `<option value="${escapeHtml(w.id)}" ${w.id === selectedId ? "selected" : ""}>${escapeHtml(w.name)}</option>`
+  ).join("");
 }
 
-function renderDashboard(){
-  const t=totals(),recent=[...data.transactions].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,5);
-  main.innerHTML=heading("Dashboard","Ringkasan kondisi keuanganmu hari ini.")+`
-  <div class="grid">
-    <section class="card span-3"><div class="stat-label">Total saldo</div><div class="stat-value">${rupiah(totalBalance())}</div><div class="stat-foot">Gabungan semua dompet</div></section>
-    <section class="card span-3"><div class="stat-label">Total pemasukan</div><div class="stat-value amount-in">${rupiah(t.income)}</div><div class="stat-foot">Semua transaksi pemasukan</div></section>
-    <section class="card span-3"><div class="stat-label">Total pengeluaran</div><div class="stat-value amount-out">${rupiah(t.expense)}</div><div class="stat-foot">Semua transaksi pengeluaran</div></section>
-    <section class="card span-3"><div class="stat-label">Arus kas bersih</div><div class="stat-value">${rupiah(t.net)}</div><div class="stat-foot">Pemasukan dikurangi pengeluaran</div></section>
-    <section class="card span-7"><div class="card-head"><h3>Transaksi terbaru</h3><button class="text-button" data-page="transactions">Lihat semua →</button></div>${recent.length?recent.map(x=>txRow(x)).join(""):`<div class="empty">Belum ada transaksi. Tambahkan transaksi pertamamu dari menu Transaksi.</div>`}</section>
-    <section class="card span-5"><div class="card-head"><h3>Saldo dompet</h3><button class="text-button" data-page="wallets">Kelola →</button></div>${data.wallets.length?data.wallets.map(w=>`<div class="item"><div class="item-name">${escapeHtml(w.name)}</div><b>${rupiah(walletBalance(w))}</b></div>`).join(""):`<div class="empty">Belum ada dompet.</div>`}</section>
-    <section class="card span-6"><div class="card-head"><h3>Anggaran</h3><button class="text-button" data-page="budgets">Kelola →</button></div>${data.budgets.length?data.budgets.slice(0,4).map(b=>budgetSummary(b)).join(""):`<div class="empty">Buat anggaran untuk mengontrol pengeluaran.</div>`}</section>
-    <section class="card span-6"><div class="card-head"><h3>Target tabungan</h3><button class="text-button" data-page="goals">Kelola →</button></div>${data.goals.length?data.goals.slice(0,4).map(g=>goalSummary(g)).join(""):`<div class="empty">Buat target tabungan pertamamu.</div>`}</section>
+function categoryOptions(selected = "Makanan") {
+  return ["Makanan", "Transportasi", "Belanja", "Tagihan", "Gaji", "Bisnis", "Hiburan", "Kesehatan", "Pendidikan", "Tabungan", "Lainnya"]
+    .map(c => `<option ${c === selected ? "selected" : ""}>${c}</option>`)
+    .join("");
+}
+
+function totals() {
+  const income = data.transactions
+    .filter(t => t.type === "income")
+    .reduce((s, t) => s + Number(t.amount), 0);
+
+  const expense = data.transactions
+    .filter(t => t.type === "expense")
+    .reduce((s, t) => s + Number(t.amount), 0);
+
+  return { income, expense, net: income - expense };
+}
+
+function walletBalance(w) {
+  return Number(w.balance || 0) + data.transactions
+    .filter(t => t.walletId === w.id)
+    .reduce((s, t) => s + (t.type === "income" ? 1 : -1) * Number(t.amount), 0);
+}
+
+function totalBalance() {
+  return data.wallets.reduce((s, w) => s + walletBalance(w), 0);
+}
+
+function txRow(t, withDelete = false) {
+  const w = data.wallets.find(x => x.id === t.walletId);
+
+  return `<div class="item">
+    <div class="item-main">
+      <div class="item-name">${escapeHtml(t.name)}</div>
+      <div class="item-meta">${escapeHtml(t.category || "Lainnya")} · ${dateLabel(t.date)}${w ? " · " + escapeHtml(w.name) : ""}</div>
+    </div>
+    <div class="item-right">
+      <div class="${t.type === "income" ? "amount-in" : "amount-out"}" style="font-weight:750">${t.type === "income" ? "+" : "−"}${rupiah(t.amount)}</div>
+      ${withDelete ? `<button class="text-button small" data-action="delete-tx" data-id="${escapeHtml(t.id)}">Hapus</button>` : ""}
+    </div>
   </div>`;
 }
 
-function renderTransactions(){
-  main.innerHTML=heading("Transaksi","Catat setiap pemasukan dan pengeluaran.")+`
+function renderPage() {
+  const pages = {
+    dashboard: renderDashboard,
+    transactions: renderTransactions,
+    wallets: renderWallets,
+    budgets: renderBudgets,
+    goals: renderGoals,
+    reports: renderReports,
+    settings: renderSettings
+  };
+
+  (pages[currentPage] || renderDashboard)();
+  refreshNominals();
+}
+
+function budgetSpent(b) {
+  return data.transactions
+    .filter(t => t.type === "expense" && t.category === b.category && (!b.month || t.date?.startsWith(b.month)))
+    .reduce((s, t) => s + Number(t.amount), 0);
+}
+
+function budgetSummary(b) {
+  const spent = budgetSpent(b);
+  const limit = Number(b.limit) || 0;
+  const pct = limit ? Math.min(100, spent / limit * 100) : 0;
+
+  return `<div class="item-main">
+    <div class="row">
+      <div class="item-name">${escapeHtml(b.category)}</div>
+      <span class="small muted">${Math.round(pct)}%</span>
+    </div>
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    <div class="item-meta">${rupiah(spent)} dari ${rupiah(limit)}</div>
+  </div>`;
+}
+
+function goalSummary(g) {
+  const target = Number(g.target) || 0;
+  const saved = Number(g.saved) || 0;
+  const pct = target ? Math.min(100, saved / target * 100) : 0;
+
+  return `<div class="item-main">
+    <div class="row">
+      <div class="item-name">${escapeHtml(g.name)}</div>
+      <span class="small muted">${Math.round(pct)}%</span>
+    </div>
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    <div class="item-meta">${rupiah(saved)} dari ${rupiah(target)}${g.deadline ? " · Target " + dateLabel(g.deadline) : ""}</div>
+  </div>`;
+}
+
+function renderDashboard() {
+  const t = totals();
+  const recent = [...data.transactions]
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    .slice(0, 5);
+
+  main.innerHTML = heading("Dashboard", "Ringkasan kondisi keuanganmu hari ini.") + `
   <div class="grid">
-    <section class="card span-4"><div class="card-head"><h3>Tambah transaksi</h3></div>
-      ${!data.wallets.length?`<div class="notice">Buat dompet terlebih dahulu.</div>`:""}
+    <section class="card span-3">
+      <div class="stat-label">Total saldo</div>
+      <div class="stat-value">${rupiah(totalBalance())}</div>
+      <div class="stat-foot">Gabungan semua dompet</div>
+    </section>
+    <section class="card span-3">
+      <div class="stat-label">Total pemasukan</div>
+      <div class="stat-value amount-in">${rupiah(t.income)}</div>
+      <div class="stat-foot">Semua transaksi pemasukan</div>
+    </section>
+    <section class="card span-3">
+      <div class="stat-label">Total pengeluaran</div>
+      <div class="stat-value amount-out">${rupiah(t.expense)}</div>
+      <div class="stat-foot">Semua transaksi pengeluaran</div>
+    </section>
+    <section class="card span-3">
+      <div class="stat-label">Arus kas bersih</div>
+      <div class="stat-value">${rupiah(t.net)}</div>
+      <div class="stat-foot">Pemasukan dikurangi pengeluaran</div>
+    </section>
+    <section class="card span-7">
+      <div class="card-head"><h3>Transaksi terbaru</h3><button class="text-button" data-page="transactions">Lihat semua →</button></div>
+      ${recent.length ? recent.map(x => txRow(x)).join("") : `<div class="empty">Belum ada transaksi. Tambahkan transaksi pertamamu dari menu Transaksi.</div>`}
+    </section>
+    <section class="card span-5">
+      <div class="card-head"><h3>Saldo dompet</h3><button class="text-button" data-page="wallets">Kelola →</button></div>
+      ${data.wallets.length ? data.wallets.map(w => `<div class="item"><div class="item-name">${escapeHtml(w.name)}</div><b>${rupiah(walletBalance(w))}</b></div>`).join("") : `<div class="empty">Belum ada dompet.</div>`}
+    </section>
+    <section class="card span-6">
+      <div class="card-head"><h3>Anggaran</h3><button class="text-button" data-page="budgets">Kelola →</button></div>
+      ${data.budgets.length ? data.budgets.slice(0, 4).map(b => budgetSummary(b)).join("") : `<div class="empty">Buat anggaran untuk mengontrol pengeluaran.</div>`}
+    </section>
+    <section class="card span-6">
+      <div class="card-head"><h3>Target tabungan</h3><button class="text-button" data-page="goals">Kelola →</button></div>
+      ${data.goals.length ? data.goals.slice(0, 4).map(g => goalSummary(g)).join("") : `<div class="empty">Buat target tabungan pertamamu.</div>`}
+    </section>
+  </div>`;
+}
+
+function renderTransactions() {
+  main.innerHTML = heading("Transaksi", "Catat setiap pemasukan dan pengeluaran.") + `
+  <div class="grid">
+    <section class="card span-4">
+      <div class="card-head"><h3>Tambah transaksi</h3></div>
+      ${!data.wallets.length ? `<div class="notice">Buat dompet terlebih dahulu.</div>` : ""}
       <form id="txForm">
-        <div class="field"><label>Jenis transaksi</label><select name="type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select></div>
-        <div class="field"><label>Nama transaksi</label><input name="name" placeholder="Contoh: Makan siang" maxlength="100" required></div>
-        ${nominalInput("amount","Nominal (Rp)")}
-        <div class="field"><label>Kategori</label><select name="category">${categoryOptions()}</select></div>
-        <div class="field"><label>Dompet</label><select name="walletId" required>${walletOptions()}</select></div>
-        <div class="field"><label>Tanggal</label><input name="date" type="date" value="${today()}" required></div>
-        <button class="primary full" ${!data.wallets.length?"disabled":""}>Simpan transaksi</button>
+        <div class="field">
+          <label>Jenis transaksi</label>
+          <select name="type">
+            <option value="expense">Pengeluaran</option>
+            <option value="income">Pemasukan</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nama transaksi</label>
+          <input name="name" placeholder="Contoh: Makan siang" maxlength="100" required>
+        </div>
+        ${nominalInput("amount", "Nominal (Rp)")}
+        <div class="field">
+          <label>Kategori</label>
+          <select name="category">${categoryOptions()}</select>
+        </div>
+        <div class="field">
+          <label>Pilih dompet</label>
+          <select name="walletId" required>${walletOptions()}</select>
+        </div>
+        <div class="field">
+          <label>Tanggal</label>
+          <input name="date" type="date" value="${today()}" required>
+        </div>
+        <button class="primary full" ${!data.wallets.length ? "disabled" : ""}>Simpan transaksi</button>
       </form>
     </section>
-    <section class="card span-8"><div class="card-head"><h3>Riwayat transaksi</h3><span class="pill">${data.transactions.length} transaksi</span></div>
-      <div class="tx-tools"><input id="txSearch" placeholder="Cari transaksi..."><select id="txFilter"><option value="all">Semua jenis</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select></div>
+    <section class="card span-8">
+      <div class="card-head"><h3>Riwayat transaksi</h3><span class="pill">${data.transactions.length} transaksi</span></div>
+      <div class="tx-tools">
+        <input id="txSearch" placeholder="Cari transaksi...">
+        <select id="txFilter">
+          <option value="all">Semua jenis</option>
+          <option value="income">Pemasukan</option>
+          <option value="expense">Pengeluaran</option>
+        </select>
+      </div>
       <div id="txList">${txListHtml()}</div>
     </section>
   </div>`;
-  $("txForm").addEventListener("submit",async e=>{
-    e.preventDefault();const f=new FormData(e.target),amount=getNominal(f.get("amount"));
-    if(amount<=0){alert("Masukkan nominal yang valid.");return;}
-    data.transactions.push({id:makeId(),type:f.get("type"),name:String(f.get("name")).trim(),amount,category:f.get("category"),walletId:f.get("walletId"),date:f.get("date")});
-    await saveData(true);renderPage();
+
+  $("txForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const f = new FormData(e.target);
+    const amount = getNominal(f.get("amount"));
+    const walletId = f.get("walletId");
+
+    if (amount <= 0) {
+      alert("Masukkan nominal yang valid.");
+      return;
+    }
+
+    if (!data.wallets.some(w => w.id === walletId)) {
+      alert("Pilih dompet yang valid terlebih dahulu.");
+      return;
+    }
+
+    data.transactions.push({
+      id: makeId(),
+      type: f.get("type"),
+      name: String(f.get("name")).trim(),
+      amount,
+      category: f.get("category"),
+      walletId,
+      date: f.get("date")
+    });
+
+    await saveData(true);
+    renderPage();
   });
-  $("txSearch").addEventListener("input",renderTxListInto);
-  $("txFilter").addEventListener("change",renderTxListInto);
-}
-function txListHtml(){
-  const list=[...data.transactions].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  return list.length?list.map(t=>txRow(t,true)).join(""):`<div class="empty">Belum ada transaksi.</div>`;
-}
-function renderTxListInto(){
-  const q=$("txSearch").value.toLowerCase(),type=$("txFilter").value;
-  const list=[...data.transactions].filter(t=>(type==="all"||t.type===type)&&(`${t.name} ${t.category}`.toLowerCase().includes(q))).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  $("txList").innerHTML=list.length?list.map(t=>txRow(t,true)).join(""):`<div class="empty">Transaksi tidak ditemukan.</div>`;
+
+  $("txSearch").addEventListener("input", renderTxListInto);
+  $("txFilter").addEventListener("change", renderTxListInto);
 }
 
-function renderWallets(){
-  main.innerHTML=heading("Dompet","Atur rekening atau dompet dan saldo awalnya.")+`
+function txListHtml() {
+  const list = [...data.transactions].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  return list.length
+    ? list.map(t => txRow(t, true)).join("")
+    : `<div class="empty">Belum ada transaksi.</div>`;
+}
+
+function renderTxListInto() {
+  const q = $("txSearch").value.toLowerCase();
+  const type = $("txFilter").value;
+
+  const list = [...data.transactions]
+    .filter(t => (type === "all" || t.type === type) && (`${t.name} ${t.category}`.toLowerCase().includes(q)))
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  $("txList").innerHTML = list.length
+    ? list.map(t => txRow(t, true)).join("")
+    : `<div class="empty">Transaksi tidak ditemukan.</div>`;
+}
+
+function renderWallets() {
+  main.innerHTML = heading("Dompet", "Atur rekening atau dompet dan saldo awalnya.") + `
   <div class="grid">
-    <section class="card span-4"><div class="card-head"><h3>Tambah dompet</h3></div><form id="walletForm">
-      <div class="field"><label>Nama dompet</label><input name="name" maxlength="50" placeholder="Contoh: Bank utama" required></div>
-      ${nominalInput("balance","Saldo awal (Rp)","0")}
-      <button class="primary full">Tambah dompet</button>
-    </form></section>
-    <section class="card span-8"><div class="card-head"><h3>Dompet saya</h3><span class="pill">${data.wallets.length} dompet</span></div>
-    ${data.wallets.length?data.wallets.map(w=>`<div class="item"><div class="item-main"><div class="item-name">${escapeHtml(w.name)}</div><div class="item-meta">Saldo awal: ${rupiah(w.balance)}</div></div><div class="item-right"><b>${rupiah(walletBalance(w))}</b><br><button class="text-button small" data-action="delete-wallet" data-id="${escapeHtml(w.id)}">Hapus</button></div></div>`).join(""):`<div class="empty">Belum ada dompet.</div>`}
+    <section class="card span-4">
+      <div class="card-head"><h3>Tambah dompet</h3></div>
+      <form id="walletForm">
+        <div class="field">
+          <label>Nama dompet</label>
+          <input name="name" maxlength="50" placeholder="Contoh: Bank utama" required>
+        </div>
+        ${nominalInput("balance", "Saldo awal (Rp)", "0")}
+        <button class="primary full">Tambah dompet</button>
+      </form>
+    </section>
+    <section class="card span-8">
+      <div class="card-head"><h3>Dompet saya</h3><span class="pill">${data.wallets.length} dompet</span></div>
+      ${data.wallets.length ? data.wallets.map(w => `
+        <div class="item">
+          <div class="item-main">
+            <div class="item-name">${escapeHtml(w.name)}</div>
+            <div class="item-meta">Saldo awal: ${rupiah(w.balance)}</div>
+          </div>
+          <div class="item-right">
+            <b>${rupiah(walletBalance(w))}</b><br>
+            <button class="text-button small" data-action="delete-wallet" data-id="${escapeHtml(w.id)}">Hapus</button>
+          </div>
+        </div>`).join("") : `<div class="empty">Belum ada dompet.</div>`}
     </section>
   </div>`;
-  $("walletForm").addEventListener("submit",async e=>{
-    e.preventDefault();const f=new FormData(e.target);
-    data.wallets.push({id:makeId(),name:String(f.get("name")).trim(),balance:getNominal(f.get("balance"))});
-    await saveData(true);renderPage();
+
+  $("walletForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const f = new FormData(e.target);
+    const name = String(f.get("name")).trim();
+
+    if (!name) {
+      alert("Masukkan nama dompet.");
+      return;
+    }
+
+    if (data.wallets.some(w => w.name.toLowerCase() === name.toLowerCase())) {
+      alert("Nama dompet tersebut sudah digunakan. Gunakan nama yang berbeda.");
+      return;
+    }
+
+    data.wallets.push({
+      id: makeId(),
+      name,
+      balance: getNominal(f.get("balance"))
+    });
+
+    await saveData(true);
+    renderPage();
   });
 }
 
-function renderBudgets(){
-  main.innerHTML=heading("Anggaran","Tentukan batas pengeluaran berdasarkan kategori.")+`
+function renderBudgets() {
+  main.innerHTML = heading("Anggaran", "Tentukan batas pengeluaran berdasarkan kategori.") + `
   <div class="grid">
-    <section class="card span-4"><div class="card-head"><h3>Buat anggaran</h3></div><form id="budgetForm">
-      <div class="field"><label>Kategori</label><select name="category">${categoryOptions()}</select></div>
-      ${nominalInput("limit","Batas anggaran (Rp)")}
-      <div class="field"><label>Bulan</label><input name="month" type="month" value="${today().slice(0,7)}" required></div>
-      <button class="primary full">Simpan anggaran</button>
-    </form></section>
-    <section class="card span-8"><div class="card-head"><h3>Anggaran saya</h3></div>
-    ${data.budgets.length?data.budgets.map(b=>`<div class="item"><div class="item-main">${budgetSummary(b)}<div class="item-meta">${escapeHtml(b.month||"Semua bulan")}</div></div><button class="text-button small" data-action="delete-budget" data-id="${escapeHtml(b.id)}">Hapus</button></div>`).join(""):`<div class="empty">Belum ada anggaran.</div>`}
+    <section class="card span-4">
+      <div class="card-head"><h3>Buat anggaran</h3></div>
+      <form id="budgetForm">
+        <div class="field">
+          <label>Kategori</label>
+          <select name="category">${categoryOptions()}</select>
+        </div>
+        ${nominalInput("limit", "Batas anggaran (Rp)")}
+        <div class="field">
+          <label>Bulan</label>
+          <input name="month" type="month" value="${today().slice(0, 7)}" required>
+        </div>
+        <button class="primary full">Simpan anggaran</button>
+      </form>
+    </section>
+    <section class="card span-8">
+      <div class="card-head"><h3>Anggaran saya</h3></div>
+      ${data.budgets.length ? data.budgets.map(b => `
+        <div class="item">
+          <div class="item-main">
+            ${budgetSummary(b)}
+            <div class="item-meta">${escapeHtml(b.month || "Semua bulan")}</div>
+          </div>
+          <button class="text-button small" data-action="delete-budget" data-id="${escapeHtml(b.id)}">Hapus</button>
+        </div>`).join("") : `<div class="empty">Belum ada anggaran.</div>`}
     </section>
   </div>`;
-  $("budgetForm").addEventListener("submit",async e=>{
-    e.preventDefault();const f=new FormData(e.target),limit=getNominal(f.get("limit"));
-    if(limit<=0){alert("Masukkan batas anggaran yang valid.");return;}
-    data.budgets.push({id:makeId(),category:f.get("category"),limit,month:f.get("month")});
-    await saveData(true);renderPage();
+
+  $("budgetForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const f = new FormData(e.target);
+    const limit = getNominal(f.get("limit"));
+
+    if (limit <= 0) {
+      alert("Masukkan batas anggaran yang valid.");
+      return;
+    }
+
+    data.budgets.push({
+      id: makeId(),
+      category: f.get("category"),
+      limit,
+      month: f.get("month")
+    });
+
+    await saveData(true);
+    renderPage();
   });
 }
 
-function renderGoals(){
-  main.innerHTML=heading("Target tabungan","Pantau progres menuju tujuan finansialmu.")+`
+function renderGoals() {
+  main.innerHTML = heading("Target tabungan", "Pantau progres menuju tujuan finansialmu.") + `
   <div class="grid">
-    <section class="card span-4"><div class="card-head"><h3>Target baru</h3></div><form id="goalForm">
-      <div class="field"><label>Nama target</label><input name="name" maxlength="80" placeholder="Contoh: Beli laptop" required></div>
-      ${nominalInput("target","Target nominal (Rp)")}
-      ${nominalInput("saved","Tabungan saat ini (Rp)","0")}
-      <div class="field"><label>Tanggal target (opsional)</label><input name="deadline" type="date"></div>
-      <button class="primary full">Simpan target</button>
-    </form></section>
-    <section class="card span-8"><div class="card-head"><h3>Target saya</h3></div>
-    ${data.goals.length?data.goals.map(g=>`<div class="item"><div class="item-main">${goalSummary(g)}<div class="form-actions"><button class="secondary small" data-action="add-goal" data-id="${escapeHtml(g.id)}">Tambah tabungan</button><button class="text-button small" data-action="delete-goal" data-id="${escapeHtml(g.id)}">Hapus</button></div></div></div>`).join(""):`<div class="empty">Belum ada target tabungan.</div>`}
+    <section class="card span-4">
+      <div class="card-head"><h3>Target baru</h3></div>
+      <form id="goalForm">
+        <div class="field">
+          <label>Nama target</label>
+          <input name="name" maxlength="80" placeholder="Contoh: Beli laptop" required>
+        </div>
+        ${nominalInput("target", "Target nominal (Rp)")}
+        ${nominalInput("saved", "Tabungan saat ini (Rp)", "0")}
+        <div class="field">
+          <label>Tanggal target (opsional)</label>
+          <input name="deadline" type="date">
+        </div>
+        <button class="primary full">Simpan target</button>
+      </form>
+    </section>
+    <section class="card span-8">
+      <div class="card-head"><h3>Target saya</h3></div>
+      ${data.goals.length ? data.goals.map(g => `
+        <div class="item">
+          <div class="item-main">
+            ${goalSummary(g)}
+            <div class="form-actions">
+              <button class="secondary small" data-action="add-goal" data-id="${escapeHtml(g.id)}">Tambah tabungan</button>
+              <button class="text-button small" data-action="delete-goal" data-id="${escapeHtml(g.id)}">Hapus</button>
+            </div>
+          </div>
+        </div>`).join("") : `<div class="empty">Belum ada target tabungan.</div>`}
     </section>
   </div>`;
-  $("goalForm").addEventListener("submit",async e=>{
-    e.preventDefault();const f=new FormData(e.target),target=getNominal(f.get("target"));
-    if(target<=0){alert("Masukkan target nominal yang valid.");return;}
-    data.goals.push({id:makeId(),name:String(f.get("name")).trim(),target,saved:getNominal(f.get("saved")),deadline:f.get("deadline")});
-    await saveData(true);renderPage();
+
+  $("goalForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const f = new FormData(e.target);
+    const target = getNominal(f.get("target"));
+
+    if (target <= 0) {
+      alert("Masukkan target nominal yang valid.");
+      return;
+    }
+
+    data.goals.push({
+      id: makeId(),
+      name: String(f.get("name")).trim(),
+      target,
+      saved: getNominal(f.get("saved")),
+      deadline: f.get("deadline")
+    });
+
+    await saveData(true);
+    renderPage();
   });
 }
 
-function renderReports(){
-  const t=totals(),monthly={};
-  data.transactions.forEach(x=>{
-    const m=(x.date||"").slice(0,7)||"Tanpa tanggal";
-    if(!monthly[m])monthly[m]={income:0,expense:0};
-    monthly[m][x.type]+=Number(x.amount);
+function renderReports() {
+  const t = totals();
+  const monthly = {};
+
+  data.transactions.forEach(x => {
+    const m = (x.date || "").slice(0, 7) || "Tanpa tanggal";
+    if (!monthly[m]) monthly[m] = { income: 0, expense: 0 };
+    monthly[m][x.type] += Number(x.amount);
   });
-  const months=Object.keys(monthly).sort().slice(-6);
-  const max=Math.max(1,...months.flatMap(m=>[monthly[m].income,monthly[m].expense]));
-  const categories={};
-  data.transactions.filter(x=>x.type==="expense").forEach(x=>categories[x.category||"Lainnya"]=(categories[x.category||"Lainnya"]||0)+Number(x.amount));
-  main.innerHTML=heading("Laporan","Lihat ringkasan arus kas dan aktivitas keuangan.")+`
+
+  const months = Object.keys(monthly).sort().slice(-6);
+  const max = Math.max(1, ...months.flatMap(m => [monthly[m].income, monthly[m].expense]));
+  const categories = {};
+
+  data.transactions.filter(x => x.type === "expense").forEach(x => {
+    categories[x.category || "Lainnya"] = (categories[x.category || "Lainnya"] || 0) + Number(x.amount);
+  });
+
+  main.innerHTML = heading("Laporan", "Lihat ringkasan arus kas dan aktivitas keuangan.") + `
   <div class="grid">
-    <section class="card span-4"><div class="stat-label">Total pemasukan</div><div class="stat-value amount-in">${rupiah(t.income)}</div></section>
-    <section class="card span-4"><div class="stat-label">Total pengeluaran</div><div class="stat-value amount-out">${rupiah(t.expense)}</div></section>
-    <section class="card span-4"><div class="stat-label">Arus kas bersih</div><div class="stat-value">${rupiah(t.net)}</div></section>
-    <section class="card span-12"><div class="card-head"><h3>Arus kas per bulan</h3><span class="pill">6 bulan terakhir</span></div>
-    ${months.length?`<div class="chart-bars">${months.map(m=>`<div class="bar-col"><div style="display:flex;align-items:flex-end;gap:3px;height:100%;width:100%;justify-content:center"><div class="bar" title="Pemasukan ${rupiah(monthly[m].income)}" style="height:${Math.max(3,monthly[m].income/max*100)}%;background:var(--green)"></div><div class="bar" title="Pengeluaran ${rupiah(monthly[m].expense)}" style="height:${Math.max(3,monthly[m].expense/max*100)}%;background:var(--red)"></div></div><span class="bar-label">${escapeHtml(m)}</span></div>`).join("")}</div><div class="row small muted"><span>🟢 Pemasukan</span><span>🔴 Pengeluaran</span></div>`:`<div class="empty">Tambahkan transaksi untuk melihat laporan.</div>`}
+    <section class="card span-4">
+      <div class="stat-label">Total pemasukan</div>
+      <div class="stat-value amount-in">${rupiah(t.income)}</div>
     </section>
-    <section class="card span-6"><div class="card-head"><h3>Pengeluaran per kategori</h3></div>${Object.keys(categories).length?Object.entries(categories).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="item"><span>${escapeHtml(k)}</span><b>${rupiah(v)}</b></div>`).join(""):`<div class="empty">Belum ada pengeluaran.</div>`}</section>
-    <section class="card span-6"><div class="card-head"><h3>Ekspor laporan</h3></div><p class="subtle">Unduh transaksi untuk dibuka di spreadsheet.</p><button class="primary" data-action="export-csv">Ekspor CSV</button></section>
+    <section class="card span-4">
+      <div class="stat-label">Total pengeluaran</div>
+      <div class="stat-value amount-out">${rupiah(t.expense)}</div>
+    </section>
+    <section class="card span-4">
+      <div class="stat-label">Arus kas bersih</div>
+      <div class="stat-value">${rupiah(t.net)}</div>
+    </section>
+    <section class="card span-12">
+      <div class="card-head"><h3>Arus kas per bulan</h3><span class="pill">6 bulan terakhir</span></div>
+      ${months.length ? `
+        <div class="chart-bars">
+          ${months.map(m => `
+            <div class="bar-col">
+              <div style="display:flex;align-items:flex-end;gap:3px;height:100%;width:100%;justify-content:center">
+                <div class="bar" title="Pemasukan ${rupiah(monthly[m].income)}" style="height:${Math.max(3, monthly[m].income / max * 100)}%;background:var(--green)"></div>
+                <div class="bar" title="Pengeluaran ${rupiah(monthly[m].expense)}" style="height:${Math.max(3, monthly[m].expense / max * 100)}%;background:var(--red)"></div>
+              </div>
+              <span class="bar-label">${escapeHtml(m)}</span>
+            </div>`).join("")}
+        </div>
+        <div class="row small muted"><span>🟢 Pemasukan</span><span>🔴 Pengeluaran</span></div>
+      ` : `<div class="empty">Tambahkan transaksi untuk melihat laporan.</div>`}
+    </section>
+    <section class="card span-6">
+      <div class="card-head"><h3>Pengeluaran per kategori</h3></div>
+      ${Object.keys(categories).length
+        ? Object.entries(categories).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="item"><span>${escapeHtml(k)}</span><b>${rupiah(v)}</b></div>`).join("")
+        : `<div class="empty">Belum ada pengeluaran.</div>`}
+    </section>
+    <section class="card span-6">
+      <div class="card-head"><h3>Ekspor laporan</h3></div>
+      <p class="subtle">Unduh transaksi untuk dibuka di spreadsheet.</p>
+      <button class="primary" data-action="export-csv">Ekspor CSV</button>
+    </section>
   </div>`;
 }
 
-function renderSettings(){
-  main.innerHTML=heading("Pengaturan","Kelola akun dan salinan data Finora.")+`
+function renderSettings() {
+  main.innerHTML = heading("Pengaturan", "Kelola akun dan salinan data Finora.") + `
   <div class="settings-grid">
-    <section class="card"><div class="card-head"><h3>Akun</h3></div><div class="item"><div><b>Email akun</b><div class="item-meta">${escapeHtml(user?.email||"-")}</div></div></div><div class="form-actions"><button class="secondary" data-action="password-reset">Kirim tautan reset password</button><button class="danger" id="settingsSignOut">Keluar akun</button></div></section>
-    <section class="card"><div class="card-head"><h3>Backup data</h3></div><p class="subtle">Unduh backup JSON atau pulihkan data dari file backup Finora.</p><div class="form-actions"><button class="primary" data-action="export-json">Unduh backup JSON</button><label class="secondary" style="display:inline-flex;align-items:center;cursor:pointer">Pulihkan JSON<input id="restoreFile" type="file" accept=".json,application/json" hidden></label></div></section>
-    <section class="card"><div class="card-head"><h3>Ekspor transaksi</h3></div><p class="subtle">Unduh daftar transaksi dalam format CSV.</p><button class="secondary" data-action="export-csv">Ekspor CSV</button></section>
+    <section class="card">
+      <div class="card-head"><h3>Akun</h3></div>
+      <div class="item">
+        <div><b>Email akun</b><div class="item-meta">${escapeHtml(user?.email || "-")}</div></div>
+      </div>
+      <div class="form-actions">
+        <button class="secondary" data-action="password-reset">Kirim tautan reset password</button>
+        <button class="danger" id="settingsSignOut">Keluar akun</button>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h3>Backup data</h3></div>
+      <p class="subtle">Unduh backup JSON atau pulihkan data dari file backup Finora.</p>
+      <div class="form-actions">
+        <button class="primary" data-action="export-json">Unduh backup JSON</button>
+        <label class="secondary" style="display:inline-flex;align-items:center;cursor:pointer">
+          Pulihkan JSON
+          <input id="restoreFile" type="file" accept=".json,application/json" hidden>
+        </label>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h3>Ekspor transaksi</h3></div>
+      <p class="subtle">Unduh daftar transaksi dalam format CSV.</p>
+      <button class="secondary" data-action="export-csv">Ekspor CSV</button>
+    </section>
   </div>`;
-  $("settingsSignOut").addEventListener("click",()=> $("signOutButton").click());
-  $("restoreFile").addEventListener("change",async e=>{
-    const file=e.target.files?.[0];if(!file)return;
-    try{
-      const p=JSON.parse(await file.text());
-      if(!p||!Array.isArray(p.transactions)||!Array.isArray(p.wallets)||!Array.isArray(p.budgets)||!Array.isArray(p.goals))throw new Error("Struktur backup tidak valid.");
-      if(!confirm("Pulihkan backup? Data saat ini akan diganti."))return;
-      data=p;await saveData(true);renderPage();alert("Backup berhasil dipulihkan.");
-    }catch(err){alert("Gagal memulihkan backup: "+err.message);}
-    e.target.value="";
+
+  $("settingsSignOut").addEventListener("click", () => $("signOutButton").click());
+
+  $("restoreFile").addEventListener("change", async e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const p = JSON.parse(await file.text());
+
+      if (!p || !Array.isArray(p.transactions) || !Array.isArray(p.wallets) || !Array.isArray(p.budgets) || !Array.isArray(p.goals)) {
+        throw new Error("Struktur backup tidak valid.");
+      }
+
+      if (!confirm("Pulihkan backup? Data saat ini akan diganti.")) return;
+
+      data = p;
+      await saveData(true);
+      renderPage();
+      alert("Backup berhasil dipulihkan.");
+    } catch (err) {
+      alert("Gagal memulihkan backup: " + err.message);
+    }
+
+    e.target.value = "";
   });
 }
 
-function downloadBlob(content,type,name){
-  const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");
-  a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-function exportCSV(){
-  const rows=[["Tanggal","Jenis","Nama","Kategori","Dompet","Nominal"]];
-  data.transactions.forEach(t=>{
-    const w=data.wallets.find(x=>x.id===t.walletId);
-    rows.push([t.date,t.type,t.name,t.category,w?.name||"",t.amount]);
-  });
-  const csv=rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");
-  downloadBlob("\uFEFF"+csv,"text/csv;charset=utf-8","finora-transaksi.csv");
-}
-function exportJSON(){
-  downloadBlob(JSON.stringify(data,null,2),"application/json","finora-backup.json");
+function downloadBlob(content, type, name) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-main.addEventListener("click",async e=>{
-  const page=e.target.closest("[data-page]");
-  if(page){changePage(page.dataset.page);return;}
-  const btn=e.target.closest("[data-action]");if(!btn)return;
-  const id=btn.dataset.id;
-  switch(btn.dataset.action){
+function exportCSV() {
+  const rows = [["Tanggal", "Jenis", "Nama", "Kategori", "Dompet", "Nominal"]];
+
+  data.transactions.forEach(t => {
+    const w = data.wallets.find(x => x.id === t.walletId);
+    rows.push([t.date, t.type, t.name, t.category, w?.name || "", t.amount]);
+  });
+
+  const csv = rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+  downloadBlob("\uFEFF" + csv, "text/csv;charset=utf-8", "finora-transaksi.csv");
+}
+
+function exportJSON() {
+  downloadBlob(JSON.stringify(data, null, 2), "application/json", "finora-backup.json");
+}
+
+main.addEventListener("click", async e => {
+  const page = e.target.closest("[data-page]");
+  if (page) {
+    changePage(page.dataset.page);
+    return;
+  }
+
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+
+  switch (btn.dataset.action) {
     case "delete-tx":
-      if(confirm("Hapus transaksi ini?")){data.transactions=data.transactions.filter(x=>x.id!==id);await saveData(true);renderPage();}
+      if (confirm("Hapus transaksi ini?")) {
+        data.transactions = data.transactions.filter(x => x.id !== id);
+        await saveData(true);
+        renderPage();
+      }
       break;
+
     case "delete-wallet":
-      if(data.transactions.some(x=>x.walletId===id)){alert("Dompet masih memiliki transaksi. Hapus atau pindahkan transaksinya terlebih dahulu.");return;}
-      if(data.wallets.length<=1){alert("Minimal harus ada satu dompet.");return;}
-      if(confirm("Hapus dompet ini?")){data.wallets=data.wallets.filter(x=>x.id!==id);await saveData(true);renderPage();}
+      if (data.transactions.some(x => x.walletId === id)) {
+        alert("Dompet masih memiliki transaksi. Hapus atau pindahkan transaksinya terlebih dahulu.");
+        return;
+      }
+
+      if (data.wallets.length <= 1) {
+        alert("Minimal harus ada satu dompet.");
+        return;
+      }
+
+      if (confirm("Hapus dompet ini?")) {
+        data.wallets = data.wallets.filter(x => x.id !== id);
+        await saveData(true);
+        renderPage();
+      }
       break;
+
     case "delete-budget":
-      if(confirm("Hapus anggaran ini?")){data.budgets=data.budgets.filter(x=>x.id!==id);await saveData(true);renderPage();}
+      if (confirm("Hapus anggaran ini?")) {
+        data.budgets = data.budgets.filter(x => x.id !== id);
+        await saveData(true);
+        renderPage();
+      }
       break;
+
     case "delete-goal":
-      if(confirm("Hapus target tabungan ini?")){data.goals=data.goals.filter(x=>x.id!==id);await saveData(true);renderPage();}
+      if (confirm("Hapus target tabungan ini?")) {
+        data.goals = data.goals.filter(x => x.id !== id);
+        await saveData(true);
+        renderPage();
+      }
       break;
-    case "add-goal":{
-      const goal=data.goals.find(x=>x.id===id);if(!goal)return;
-      const value=prompt("Nominal tabungan yang ingin ditambahkan (angka saja):");
-      if(value===null)return;
-      const amount=getNominal(value);
-      if(amount<=0){alert("Masukkan nominal yang valid.");return;}
-      goal.saved=Number(goal.saved)+amount;await saveData(true);renderPage();break;
+
+    case "add-goal": {
+      const goal = data.goals.find(x => x.id === id);
+      if (!goal) return;
+
+      const value = prompt("Nominal tabungan yang ingin ditambahkan (angka saja):");
+      if (value === null) return;
+
+      const amount = getNominal(value);
+
+      if (amount <= 0) {
+        alert("Masukkan nominal yang valid.");
+        return;
+      }
+
+      goal.saved = Number(goal.saved) + amount;
+      await saveData(true);
+      renderPage();
+      break;
     }
-    case "export-csv":exportCSV();break;
-    case "export-json":exportJSON();break;
-    case "password-reset":{
-      const {error}=await supabase.auth.resetPasswordForEmail(user.email,{redirectTo:window.location.origin});
-      if(error)alert(error.message);else alert("Jika email dapat menerima reset password, tautan akan dikirim. Periksa inbox dan folder Spam.");
+
+    case "export-csv":
+      exportCSV();
+      break;
+
+    case "export-json":
+      exportJSON();
+      break;
+
+    case "password-reset": {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: window.location.origin
+      });
+
+      if (error) alert(error.message);
+      else alert("Jika email dapat menerima reset password, tautan akan dikirim. Periksa inbox dan folder Spam.");
       break;
     }
   }
 });
 
-supabase.auth.onAuthStateChange((event,session)=>{
-  if(event==="SIGNED_OUT"){
-    user=null;appScreen.classList.add("hidden");authScreen.classList.remove("hidden");setAuthMode("login");
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_OUT") {
+    user = null;
+    appScreen.classList.add("hidden");
+    authScreen.classList.remove("hidden");
+    setAuthMode("login");
   }
-  if(event==="PASSWORD_RECOVERY"){
-    const newPassword=prompt("Masukkan kata sandi baru (minimal 6 karakter):");
-    if(newPassword&&newPassword.length>=6){
-      supabase.auth.updateUser({password:newPassword}).then(({error})=>alert(error?error.message:"Kata sandi berhasil diperbarui."));
-    }else if(newPassword!==null){alert("Kata sandi minimal 6 karakter.");}
+
+  if (event === "PASSWORD_RECOVERY") {
+    const newPassword = prompt("Masukkan kata sandi baru (minimal 6 karakter):");
+
+    if (newPassword && newPassword.length >= 6) {
+      supabase.auth.updateUser({ password: newPassword }).then(({ error }) => {
+        alert(error ? error.message : "Kata sandi berhasil diperbarui.");
+      });
+    } else if (newPassword !== null) {
+      alert("Kata sandi minimal 6 karakter.");
+    }
   }
 });
 
-(async()=>{
-  const {data:sessionData,error}=await supabase.auth.getSession();
-  if(error)console.error(error);
-  user=sessionData?.session?.user||null;
+(async () => {
+  const { data: sessionData, error } = await supabase.auth.getSession();
+
+  if (error) console.error(error);
+
+  user = sessionData?.session?.user || null;
   await boot();
 })();
 })();
