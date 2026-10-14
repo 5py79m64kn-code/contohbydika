@@ -1,1683 +1,773 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-
-<title>Fire Detector</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>Finora — Personal Finance</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{
-box-sizing:border-box;
--webkit-tap-highlight-color:transparent;
+:root {
+  --bg:#0b1020; --panel:#121a2e; --panel2:#18233b;
+  --text:#f3f6ff; --muted:#93a0bb; --border:#26334e;
+  --primary:#8b7cff; --green:#45d6a0; --red:#ff6b81;
+  --radius:18px;
 }
-
-html,body{
-margin:0;
-padding:0;
-background:#050b15;
-color:white;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.app{max-width:1250px;margin:auto;padding:20px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#8b7cff,#45d6a0);display:grid;place-items:center;color:#0b1020;font-size:23px;font-weight:900}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:23px;margin-bottom:3px}
+h2{font-size:19px}
+h3{font-size:15px}
+button,.btn{border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:11px;padding:11px 14px}
+button.primary,.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+button.danger{color:var(--red)}
+button:hover{filter:brightness(1.1)}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px}
+.sidebar,.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius)}
+.sidebar{padding:12px;height:max-content;position:sticky;top:15px}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav button{text-align:left;background:transparent;border-color:transparent;color:var(--muted)}
+.nav button.active{background:var(--panel2);color:var(--text);border-color:var(--border)}
+.content{min-width:0}
+.page-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.card{padding:19px;min-width:0}
+.stat-label{font-size:13px;color:var(--muted);margin-bottom:12px}
+.stat-value{font-size:clamp(17px,2vw,25px);font-weight:750;overflow-wrap:anywhere}
+.stat-icon{font-size:20px;margin-bottom:10px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+input,select,textarea{width:100%;background:#0c1426;border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;outline:none;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--primary)}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:7px}
+.field{margin-bottom:15px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--border);font-size:13px}
+th{color:var(--muted);font-weight:500}
+.table-wrap{overflow:auto}
+.pill{display:inline-block;border-radius:20px;padding:5px 9px;font-size:11px;background:var(--panel2)}
+.income{color:var(--green)}.expense{color:var(--red)}
+.progress{height:8px;background:#29334a;border-radius:20px;overflow:hidden;margin:12px 0}
+.progress span{height:100%;display:block;background:var(--primary);border-radius:20px}
+.item{padding:14px 0;border-bottom:1px solid var(--border)}
+.item:last-child{border-bottom:0}
+.item-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.empty{text-align:center;padding:28px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;padding:15px;z-index:10}
+.modal-box{width:min(520px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:22px}
+.modal-head{display:flex;justify-content:space-between;align-items:center}
+.auth-screen{min-height:100vh;display:grid;place-items:center;padding:20px}
+.auth-card{width:min(420px,100%);background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:26px}
+.notice{padding:12px;border-radius:10px;background:var(--panel2);font-size:13px;margin-bottom:15px;overflow-wrap:anywhere}
+.error{color:var(--red)}.success{color:var(--green)}
+canvas{width:100%;height:230px;display:block}
+.mobile-nav{display:none}
+.footer{text-align:center;color:var(--muted);font-size:12px;padding:25px 0}
+@media(max-width:850px){
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .layout{grid-template-columns:1fr}
+ .sidebar{display:none}
+ .mobile-nav{display:flex;gap:7px;overflow-x:auto;padding:8px 0 15px}
+ .mobile-nav button{white-space:nowrap}
+ .two-col{grid-template-columns:1fr}
+ .app{padding:14px}
 }
-
-body{
-display:flex;
-justify-content:center;
-}
-
-.app{
-width:100%;
-max-width:760px;
-min-height:100vh;
-background:#07101f;
-}
-
-.header{
-padding:24px 18px;
-background:linear-gradient(180deg,#19273d,#101b2d);
-border-bottom:1px solid #30415c;
-}
-
-.title{
-margin:0;
-font-size:25px;
-font-weight:800;
-}
-
-.subtitle{
-margin-top:7px;
-font-size:13px;
-color:#9eabc0;
-}
-
-.card{
-margin:14px;
-padding:15px;
-border-radius:16px;
-background:linear-gradient(145deg,#16243a,#0e192c);
-border:1px solid #263750;
-}
-
-.section-title{
-margin:0 0 13px;
-font-size:18px;
-}
-
-.camera{
-position:relative;
-width:100%;
-height:330px;
-background:#02060b;
-border-radius:14px;
-overflow:hidden;
-border:1px solid #2b3a52;
-}
-
-#video{
-width:100%;
-height:100%;
-display:block;
-object-fit:cover;
-background:#02060b;
-transform:scaleX(-1);
-}
-
-#video.rear{
-transform:scaleX(1);
-}
-
-.placeholder{
-position:absolute;
-inset:0;
-display:grid;
-place-items:center;
-text-align:center;
-background:#07101f;
-color:#aab6c9;
-z-index:2;
-}
-
-.placeholder .icon{
-font-size:50px;
-margin-bottom:8px;
-}
-
-.badge{
-position:absolute;
-top:12px;
-right:12px;
-z-index:5;
-padding:7px 11px;
-border-radius:20px;
-font-size:11px;
-font-weight:bold;
-background:#091222;
-}
-
-.online{
-color:#5be68f;
-border:1px solid #1e9d58;
-}
-
-.offline{
-color:#ff8585;
-border:1px solid #9e3e3e;
-}
-
-.frame{
-position:absolute;
-z-index:3;
-left:7%;
-top:10%;
-width:86%;
-height:80%;
-border:2px solid rgba(255,255,255,.18);
-border-radius:18px;
-pointer-events:none;
-}
-
-.frame.danger{
-border-color:#ff3030;
-box-shadow:0 0 25px rgba(255,0,0,.8);
-}
-
-.scan{
-position:absolute;
-z-index:4;
-left:0;
-width:100%;
-height:2px;
-background:#31ff75;
-box-shadow:0 0 12px #31ff75;
-opacity:.6;
-animation:scan 2.5s linear infinite;
-pointer-events:none;
-}
-
-@keyframes scan{
-0%{top:0}
-50%{top:100%}
-100%{top:0}
-}
-
-.controls{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:9px;
-margin-top:12px;
-}
-
-button{
-border:0;
-border-radius:11px;
-padding:14px 8px;
-font-size:13px;
-font-weight:800;
-color:white;
-background:#2a3951;
-cursor:pointer;
--webkit-appearance:none;
-touch-action:manipulation;
-}
-
-button:active{
-opacity:.75;
-transform:scale(.98);
-}
-
-button:disabled{
-opacity:.45;
-}
-
-.start{
-background:#3184ff;
-}
-
-.stop{
-background:#3a4659;
-}
-
-.cameraBtn{
-background:#247bce;
-}
-
-.flashBtn{
-background:#b88416;
-}
-
-.voiceBtn{
-background:#7657d9;
-}
-
-.voiceBtn.active{
-background:#208b55;
-}
-
-.status{
-margin-top:11px;
-padding:12px;
-border-radius:10px;
-background:#091222;
-border:1px solid #1e2c43;
-font-size:13px;
-line-height:1.5;
-}
-
-.status.danger{
-background:#641c1c;
-border-color:#ff3838;
-}
-
-.status.safe{
-background:#0b2b1b;
-border-color:#208b55;
-color:#70f0a0;
-}
-
-.stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:8px;
-}
-
-.stat{
-padding:14px 5px;
-text-align:center;
-background:#091426;
-border:1px solid #263750;
-border-radius:11px;
-}
-
-.stat strong{
-display:block;
-font-size:23px;
-color:#4c92ff;
-margin-bottom:5px;
-}
-
-.stat span{
-font-size:10px;
-color:#9daabd;
-}
-
-.log{
-height:220px;
-overflow:auto;
-background:#071120;
-border:1px solid #1d2b41;
-border-radius:11px;
-}
-
-.log-item{
-padding:9px;
-border-bottom:1px solid #18253a;
-font-family:monospace;
-font-size:11px;
-}
-
-.green{
-color:#35dd78;
-}
-
-.red{
-color:#ff6262;
-}
-
-.white{
-color:#d9e0ec;
-}
-
-.tip{
-margin-top:10px;
-font-size:11px;
-line-height:1.5;
-color:#8f9db3;
-}
-
-footer{
-text-align:center;
-padding:10px 15px 28px;
-font-size:11px;
-color:#6e7c93;
-}
-
-.powered{
-margin-top:5px;
-}
-
-.powered b{
-color:#ff3b30;
-}
-
-.overlay{
-position:fixed;
-z-index:100;
-inset:0;
-display:none;
-align-items:center;
-justify-content:center;
-padding:18px;
-background:rgba(0,0,0,.8);
-}
-
-.overlay.show{
-display:flex;
-}
-
-.alert{
-width:100%;
-max-width:500px;
-padding:25px 18px;
-text-align:center;
-background:#18253a;
-border:2px solid #ef5350;
-border-radius:18px;
-}
-
-.alert-icon{
-font-size:55px;
-}
-
-.alert h2{
-margin:7px 0;
-color:#ff5b5b;
-font-size:28px;
-}
-
-.detail{
-margin:15px 0;
-padding:13px;
-text-align:left;
-border-radius:10px;
-background:#091426;
-line-height:1.8;
-}
-
-.alert button{
-width:100%;
-background:#ef5350;
-}
-
-@media(max-width:520px){
-
-.camera{
-height:285px;
-}
-
-.card{
-margin:11px;
-padding:13px;
-}
-
-.title{
-font-size:22px;
-}
-
-button{
-font-size:12px;
-}
-
+@media(max-width:480px){
+ .grid{gap:9px}.card{padding:14px}
+ .stat-value{font-size:17px}
+ .topbar{align-items:flex-start}
+ .form-grid{grid-template-columns:1fr}
+ .page-title{align-items:flex-start;flex-direction:column}
 }
 </style>
 </head>
-
 <body>
 
-<div class="app">
-
-<header class="header">
-
-<h1 class="title">
-🔥 Detektor Api Kamera HP
-</h1>
-
-<div class="subtitle">
-Kamera aktif = pemantauan api otomatis.
-</div>
-
-</header>
-
-
-<section class="card">
-
-<div class="camera">
-
-<video
-id="video"
-autoplay
-muted
-playsinline>
-</video>
-
-<div
-id="placeholder"
-class="placeholder">
-
-<div>
-
-<div class="icon">📷</div>
-
-<b>Kamera belum aktif</b>
-
-<br>
-
-<small>
-Tekan Mulai Kamera
-</small>
-
-</div>
-
-</div>
-
-<div
-id="badge"
-class="badge offline">
-
-● OFFLINE
-
-</div>
-
-<div
-id="frame"
-class="frame">
-</div>
-
-<div class="scan"></div>
-
-</div>
-
-
-<div class="controls">
-
-<button
-id="start"
-class="start">
-▶ Mulai Kamera
-</button>
-
-<button
-id="stop"
-class="stop"
-disabled>
-■ Matikan
-</button>
-
-<button
-id="switch"
-class="cameraBtn">
-🔄 Ubah Kamera
-</button>
-
-<button
-id="flash"
-class="flashBtn">
-🔦 Nyalakan Flash
-</button>
-
-<button
-id="voice"
-class="voiceBtn">
-🔊 Nyalakan Suara
-</button>
-
-</div>
-
-
-<div
-id="status"
-class="status">
-
-Tekan Mulai Kamera untuk memulai.
-
-</div>
-
+<section id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="brand" style="margin-bottom:24px">
+      <div class="logo">F</div>
+      <div><h1>Finora</h1><div class="muted small">Personal Finance Manager</div></div>
+    </div>
+    <h2 id="authTitle">Selamat datang</h2>
+    <p class="muted small" id="authSubtitle">Masuk untuk mengelola keuanganmu.</p>
+    <div id="authMessage" class="notice hidden"></div>
+    <form id="authForm">
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input id="authEmail" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" minlength="6" autocomplete="current-password" required>
+      </div>
+      <div class="field hidden" id="confirmField">
+        <label for="authConfirm">Ulangi password</label>
+        <input id="authConfirm" type="password" minlength="6">
+      </div>
+      <button id="authSubmit" class="primary" style="width:100%">Masuk</button>
+    </form>
+    <p class="muted small" style="margin-top:18px">
+      <span id="authSwitchText">Belum punya akun?</span>
+      <button type="button" id="authSwitch" style="padding:3px 6px;background:transparent;border:0;color:var(--primary)">Daftar</button>
+    </p>
+    <p class="muted small">Data keuangan disimpan ke akun Supabase milikmu.</p>
+  </div>
 </section>
 
+<div id="appScreen" class="app hidden">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">F</div>
+      <div><h1>Finora</h1><div class="muted small">Personal Finance Manager</div></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="userLabel" class="muted small"></span>
+      <button id="logoutBtn">Keluar</button>
+    </div>
+  </header>
 
-<section class="card">
+  <div class="mobile-nav nav" id="mobileNav"></div>
 
-<h2 class="section-title">
-📊 Statistik
-</h2>
-
-<div class="stats">
-
-<div class="stat">
-<strong id="events">0</strong>
-<span>Kejadian</span>
+  <div class="layout">
+    <aside class="sidebar"><div class="nav" id="sideNav"></div></aside>
+    <main class="content">
+      <div id="pageContent"></div>
+    </main>
+  </div>
+  <div class="footer">Finora · Personal Finance Manager</div>
 </div>
 
-<div class="stat">
-<strong id="score">0%</strong>
-<span>Skor Api</span>
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="modalTitle">Form</h2><button type="button" id="modalClose">✕</button></div>
+    <div id="modalBody"></div>
+  </div>
 </div>
 
-<div class="stat">
-<strong id="last">--:--:--</strong>
-<span>Terakhir</span>
-</div>
-
-</div>
-
-</section>
-
-
-<section class="card">
-
-<h2 class="section-title">
-📜 Log Aktivitas
-</h2>
-
-<div
-id="log"
-class="log">
-</div>
-
-<div class="tip">
-Deteksi ini merupakan analisis warna dan
-kecerahan kamera. Hasilnya bukan alat
-keselamatan kebakaran profesional.
-</div>
-
-</section>
-
-
-<footer>
-
-<div>
-Fire Detector • HTML + CSS + JavaScript
-</div>
-
-<div class="powered">
-Powered by <b>Pratama Andika Wiyoga</b>
-</div>
-
-</footer>
-
-</div>
-
-
-<div
-id="overlay"
-class="overlay">
-
-<div class="alert">
-
-<div class="alert-icon">
-🚨
-</div>
-
-<h2>
-API TERDETEKSI!
-</h2>
-
-<p>
-Kemungkinan api terdeteksi oleh kamera.
-</p>
-
-<div class="detail">
-
-<b>Skor:</b>
-<span id="alertScore">0%</span>
-
-<br>
-
-<b>Waktu:</b>
-<span id="alertTime">--</span>
-
-</div>
-
-<button id="close">
-Tutup Peringatan
-</button>
-
-</div>
-
-</div>
-
+<div id="toast" class="notice hidden" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:30;max-width:90%;box-shadow:0 5px 30px #0008"></div>
 
 <script>
-
-/* ==================================================
-   ELEMENT
-================================================== */
-
-const video = document.getElementById("video");
-const placeholder = document.getElementById("placeholder");
-const badge = document.getElementById("badge");
-
-const startBtn = document.getElementById("start");
-const stopBtn = document.getElementById("stop");
-const switchBtn = document.getElementById("switch");
-const flashBtn = document.getElementById("flash");
-const voiceBtn = document.getElementById("voice");
-
-const statusBox = document.getElementById("status");
-
-const eventsBox = document.getElementById("events");
-const scoreBox = document.getElementById("score");
-const lastBox = document.getElementById("last");
-
-const logBox = document.getElementById("log");
-
-const frame = document.getElementById("frame");
-
-const overlay = document.getElementById("overlay");
-const closeBtn = document.getElementById("close");
-
-const alertScore = document.getElementById("alertScore");
-const alertTime = document.getElementById("alertTime");
-
-
-/* ==================================================
-   STATE
-================================================== */
-
-let stream = null;
-
-let cameraMode = "user";
-
-let detector = null;
-
-let torch = false;
-
-let soundOn = false;
-
-let fireActive = false;
-
-let fireFrames = 0;
-
-let clearFrames = 0;
-
-let eventCount = 0;
-
-let lastDetectionTime = 0;
-
-let audioContext = null;
-
-
-/* ==================================================
-   TIME
-================================================== */
-
-function getTime(){
-
-return new Date().toLocaleTimeString(
-"id-ID",
-{
-hour12:false
-}
-);
-
-}
-
-
-/* ==================================================
-   LOG
-================================================== */
-
-function addLog(text,type="white"){
-
-const item = document.createElement("div");
-
-item.className =
-"log-item " + type;
-
-item.textContent =
-"[" + getTime() + "] " + text;
-
-logBox.prepend(item);
-
-}
-
-
-/* ==================================================
-   STATUS CAMERA
-================================================== */
-
-function setOnline(value){
-
-if(value){
-
-badge.textContent = "● ONLINE";
-
-badge.className =
-"badge online";
-
-}else{
-
-badge.textContent = "● OFFLINE";
-
-badge.className =
-"badge offline";
-
-}
-
-}
-
-
-/* ==================================================
-   CAMERA MIRROR
-================================================== */
-
-function setMirror(){
-
-if(cameraMode === "user"){
-
-video.classList.remove("rear");
-
-}else{
-
-video.classList.add("rear");
-
-}
-
-}
-
-
-/* ==================================================
-   SPEECH
-================================================== */
-
-function speak(text){
-
-if(!soundOn){
-
-return;
-
-}
-
-if(!window.speechSynthesis){
-
-return;
-
-}
-
-window.speechSynthesis.cancel();
-
-const speech =
-new SpeechSynthesisUtterance(text);
-
-speech.lang = "id-ID";
-
-speech.rate = 0.9;
-
-speech.pitch = 1;
-
-speech.volume = 1;
-
-const voices =
-window.speechSynthesis.getVoices();
-
-const indo =
-voices.find(
-v =>
-v.lang &&
-v.lang.toLowerCase().startsWith("id")
-);
-
-if(indo){
-
-speech.voice = indo;
-
-}
-
-window.speechSynthesis.speak(speech);
-
-}
-
-
-/* ==================================================
-   VOICE BUTTON
-================================================== */
-
-voiceBtn.addEventListener(
-"click",
-function(){
-
-soundOn = true;
-
-voiceBtn.textContent =
-"🔊 Suara Aktif";
-
-voiceBtn.classList.add("active");
-
-addLog(
-"Suara otomatis diaktifkan.",
-"green"
-);
-
-speak(
-"Suara otomatis telah diaktifkan."
-);
-
-}
-);
-
-
-/* ==================================================
-   START CAMERA
-================================================== */
-
-async function startCamera(){
-
-if(
-!navigator.mediaDevices ||
-!navigator.mediaDevices.getUserMedia
-){
-
-statusBox.textContent =
-"❌ Browser tidak mendukung akses kamera.";
-
-addLog(
-"getUserMedia tidak tersedia.",
-"red"
-);
-
-return;
-
-}
-
-
-statusBox.textContent =
-"📷 Meminta izin kamera...";
-
-addLog(
-"Meminta izin kamera."
-);
-
-
-try{
-
-const constraints = {
-
-video:{
-facingMode:{
-ideal:cameraMode
-},
-width:{
-ideal:1280
-},
-height:{
-ideal:720
-}
-},
-
-audio:false
-
-};
-
-
-stream =
-await navigator.mediaDevices.getUserMedia(
-constraints
-);
-
-
-video.srcObject = stream;
-
-await video.play();
-
-setMirror();
-
-
-placeholder.style.display =
-"none";
-
-startBtn.disabled = true;
-
-stopBtn.disabled = false;
-
-setOnline(true);
-
-
-statusBox.textContent =
-"✅ Kamera aktif. Pemantauan api berjalan.";
-
-
-addLog(
-cameraMode === "user"
-?
-"📷 Kamera depan aktif."
-:
-"📷 Kamera belakang aktif.",
-"green"
-);
-
-
-/*
-Aktifkan suara otomatis setelah
-interaksi tombol kamera.
-*/
-
-soundOn = true;
-
-voiceBtn.textContent =
-"🔊 Suara Aktif";
-
-voiceBtn.classList.add("active");
-
-
-setTimeout(
-function(){
-
-speak(
-"Kamera aktif. Sistem deteksi api berjalan otomatis."
-);
-
-},
-400
-);
-
-
-startDetection();
-
-
-}catch(error){
-
-console.error(error);
-
-let message =
-"❌ Kamera gagal digunakan.";
-
-if(error.name === "NotAllowedError"){
-
-message =
-"❌ Izin kamera ditolak. Pilih Allow/Izinkan.";
-
-}
-
-if(error.name === "NotFoundError"){
-
-message =
-"❌ Kamera tidak ditemukan.";
-
-}
-
-if(error.name === "NotReadableError"){
-
-message =
-"❌ Kamera sedang digunakan aplikasi lain.";
-
-}
-
-if(error.name === "SecurityError"){
-
-message =
-"❌ Kamera membutuhkan HTTPS.";
-
-}
-
-statusBox.textContent =
-message;
-
-addLog(
-message,
-"red"
-);
-
-}
-
-}
-
-
-/* ==================================================
-   DETECTION LOOP
-================================================== */
-
-function startDetection(){
-
-stopDetection();
-
-detector =
-setInterval(
-detectFire,
-700
-);
-
-}
-
-
-function stopDetection(){
-
-if(detector){
-
-clearInterval(detector);
-
-detector = null;
-
-}
-
-}
-
-
-/* ==================================================
-   FIRE SCORE
-================================================== */
-
-function calculateScore(){
-
-if(
-!stream ||
-video.readyState < 2 ||
-!video.videoWidth
-){
-
-return 0;
-
-}
-
-
-const canvas =
-document.createElement("canvas");
-
-const width = 100;
-
-const height =
-Math.round(
-width *
-video.videoHeight /
-video.videoWidth
-);
-
-canvas.width = width;
-
-canvas.height = height;
-
-
-const ctx =
-canvas.getContext(
-"2d",
-{
-willReadFrequently:true
-}
-);
-
-ctx.drawImage(
-video,
-0,
-0,
-width,
-height
-);
-
-
-const data =
-ctx.getImageData(
-0,
-0,
-width,
-height
-).data;
-
-
-let firePixels = 0;
-
-let total = 0;
-
-
-for(
-let i=0;
-i<data.length;
-i+=4
-){
-
-const r = data[i];
-
-const g = data[i+1];
-
-const b = data[i+2];
-
-const brightness =
-(r+g+b)/3;
-
-
-const orange =
-r > 150 &&
-g > 40 &&
-g < 210 &&
-b < 130 &&
-r > g * 1.1;
-
-
-const yellow =
-r > 170 &&
-g > 90 &&
-b < 120;
-
-
-const red =
-r > 170 &&
-g < 130 &&
-b < 100 &&
-r > g * 1.3;
-
-
-const brightFire =
-r > 200 &&
-g > 80 &&
-g < 220 &&
-b < 150 &&
-brightness > 130;
-
-
-if(
-orange ||
-yellow ||
-red ||
-brightFire
-){
-
-firePixels++;
-
-}
-
-total++;
-
-}
-
-
-const ratio =
-firePixels /
-Math.max(total,1);
-
-
-/*
-Skor mentah.
-*/
-
-return Math.round(
-Math.min(
-100,
-ratio * 100
-)
-);
-
-}
-
-
-/* ==================================================
-   DETECTION
-================================================== */
-
-function detectFire(){
-
-const score =
-calculateScore();
-
-scoreBox.textContent =
-score + "%";
-
-
-/*
-Butuh beberapa frame supaya
-tidak langsung false alarm.
-*/
-
-if(score >= 5){
-
-fireFrames++;
-
-clearFrames = 0;
-
-}else{
-
-clearFrames++;
-
-fireFrames = 0;
-
-}
-
-
-/*
-API TERDETEKSI
-*/
-
-if(
-!fireActive &&
-fireFrames >= 3
-){
-
-triggerFire(score);
-
-}
-
-
-/*
-API PADAM
-*/
-
-if(
-fireActive &&
-clearFrames >= 8
-){
-
-extinguishFire();
-
-}
-
-}
-
-
-/* ==================================================
-   FIRE ALERT
-================================================== */
-
-function triggerFire(score){
-
-const nowMs = Date.now();
-
-
-if(
-nowMs - lastDetectionTime < 5000
-){
-
-return;
-
-}
-
-
-lastDetectionTime = nowMs;
-
-fireActive = true;
-
-eventCount++;
-
-
-/*
-STATISTIK
-*/
-
-eventsBox.textContent =
-eventCount;
-
-lastBox.textContent =
-getTime();
-
-scoreBox.textContent =
-score + "%";
-
-
-/*
-POPUP
-*/
-
-alertScore.textContent =
-score + "%";
-
-alertTime.textContent =
-new Date().toLocaleString("id-ID");
-
-overlay.classList.add("show");
-
-
-/*
-STATUS
-*/
-
-statusBox.classList.remove("safe");
-
-statusBox.classList.add("danger");
-
-statusBox.textContent =
-"🚨 API TERDETEKSI!";
-
-
-frame.classList.add("danger");
-
-
-/*
-LOG
-*/
-
-addLog(
-"🚨 API TERDETEKSI! Skor " +
-score + "%",
-"red"
-);
-
-
-/*
-VOICE
-*/
-
-speak(
-"Peringatan. Api terdeteksi di depan kamera."
-);
-
-}
-
-
-/* ==================================================
-   API PADAM
-================================================== */
-
-function extinguishFire(){
-
-if(!fireActive){
-
-return;
-
-}
-
-fireActive = false;
-
-statusBox.classList.remove("danger");
-
-statusBox.classList.add("safe");
-
-statusBox.textContent =
-"✅ Api sudah padam. Sistem kembali memantau.";
-
-frame.classList.remove("danger");
-
-addLog(
-"✅ Api sudah padam.",
-"green"
-);
-
-speak(
-"Api sudah padam. Sistem kembali memantau."
-);
-
-}
-
-
-/* ==================================================
-   SWITCH CAMERA
-================================================== */
-
-switchBtn.addEventListener(
-"click",
-async function(){
-
-if(!navigator.mediaDevices){
-
-return;
-
-}
-
-
-/*
-Kalau kamera belum aktif,
-cukup ganti mode untuk kamera
-berikutnya.
-*/
-
-cameraMode =
-cameraMode === "user"
-?
-"environment"
-:
-"user";
-
-
-if(!stream){
-
-setMirror();
-
-addLog(
-cameraMode === "user"
-?
-"Mode kamera depan dipilih."
-:
-"Mode kamera belakang dipilih.",
-"green"
-);
-
-return;
-
-}
-
-
-stopDetection();
-
-
-stream
-.getTracks()
-.forEach(
-track =>
-track.stop()
-);
-
-
-try{
-
-const newStream =
-await navigator.mediaDevices.getUserMedia({
-
-video:{
-facingMode:{
-exact:cameraMode
-}
-},
-
-audio:false
-
+"use strict";
+
+/* Konfigurasi Supabase */
+const SUPABASE_URL = "https://doqevpmqvhcnyffhmeia.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_DFfi7L-5zCsznP3BcQBUDA_VLaHw9X2";
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const $ = id => document.getElementById(id);
+const rupiah = n => new Intl.NumberFormat("id-ID", {
+  style:"currency",currency:"IDR",maximumFractionDigits:0
+}).format(Number(n)||0);
+const today = () => new Date().toLocaleDateString("sv-SE");
+const monthNow = () => today().slice(0,7);
+const uid = () => crypto.randomUUID();
+const escapeHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+
+const defaults = () => ({
+  transactions:[],
+  wallets:[{id:uid(),name:"Dompet Utama",balance:0}],
+  budgets:[],
+  goals:[],
+  settings:{currency:"IDR"}
 });
 
+let user = null;
+let data = defaults();
+let page = "dashboard";
+let authMode = "login";
+let saving = false;
+let saveTimer = null;
+let toastTimer = null;
 
-stream = newStream;
+const pages = [
+  ["dashboard","▦","Dashboard"],
+  ["transactions","⇄","Transaksi"],
+  ["wallets","▣","Dompet"],
+  ["budgets","◷","Anggaran"],
+  ["goals","◎","Tabungan"],
+  ["reports","▤","Laporan"],
+  ["settings","⚙","Pengaturan"]
+];
 
-video.srcObject = stream;
-
-await video.play();
-
-setMirror();
-
-torch = false;
-
-flashBtn.textContent =
-"🔦 Nyalakan Flash";
-
-fireActive = false;
-
-fireFrames = 0;
-
-clearFrames = 0;
-
-frame.classList.remove("danger");
-
-statusBox.classList.remove("danger");
-
-statusBox.classList.remove("safe");
-
-statusBox.textContent =
-"🔄 Kamera berhasil diubah.";
-
-addLog(
-cameraMode === "user"
-?
-"🔄 Kamera depan aktif."
-:
-"🔄 Kamera belakang aktif.",
-"green"
-);
-
-startDetection();
-
-
-}catch(error){
-
-console.error(error);
-
-addLog(
-"❌ Gagal mengganti kamera.",
-"red"
-);
-
-statusBox.textContent =
-"❌ Kamera tidak dapat diubah.";
-
+function toast(message, type=""){
+  $("toast").textContent = message;
+  $("toast").className = "notice " + type;
+  $("toast").classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>$("toast").classList.add("hidden"),3500);
 }
 
-}
-);
-
-
-/* ==================================================
-   FLASH
-================================================== */
-
-flashBtn.addEventListener(
-"click",
-async function(){
-
-if(!stream){
-
-statusBox.textContent =
-"Nyalakan kamera terlebih dahulu.";
-
-return;
-
+function showAuthMessage(message, type=""){
+  $("authMessage").textContent = message;
+  $("authMessage").className = "notice " + type;
+  $("authMessage").classList.remove("hidden");
 }
 
-
-const track =
-stream.getVideoTracks()[0];
-
-
-if(
-!track ||
-!track.getCapabilities
-){
-
-statusBox.textContent =
-"⚠️ Flash tidak tersedia.";
-
-return;
-
+function setAuthMode(mode){
+  authMode = mode;
+  const login = mode === "login";
+  $("authTitle").textContent = login ? "Selamat datang" : "Buat akun Finora";
+  $("authSubtitle").textContent = login ? "Masuk untuk mengelola keuanganmu." : "Daftar untuk mulai mencatat keuangan.";
+  $("authSubmit").textContent = login ? "Masuk" : "Buat akun";
+  $("authSwitchText").textContent = login ? "Belum punya akun?" : "Sudah punya akun?";
+  $("authSwitch").textContent = login ? "Daftar" : "Masuk";
+  $("confirmField").classList.toggle("hidden",login);
+  $("authConfirm").required = !login;
+  $("authPassword").autocomplete = login ? "current-password" : "new-password";
+  $("authMessage").classList.add("hidden");
 }
 
+$("authSwitch").addEventListener("click",()=>setAuthMode(authMode==="login"?"signup":"login"));
 
-const caps =
-track.getCapabilities();
-
-
-if(!caps.torch){
-
-statusBox.textContent =
-"⚠️ Flash tidak didukung perangkat/browser ini.";
-
-addLog(
-"Flash tidak tersedia.",
-"red"
-);
-
-return;
-
-}
-
-
-try{
-
-torch = !torch;
-
-await track.applyConstraints({
-
-advanced:[
-{
-torch:torch
-}
-]
-
+$("authForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const email=$("authEmail").value.trim();
+  const password=$("authPassword").value;
+  $("authSubmit").disabled=true;
+  $("authSubmit").textContent="Memproses...";
+  try{
+    if(authMode==="signup"){
+      if(password!==$("authConfirm").value) throw new Error("Konfirmasi password tidak cocok.");
+      const {data:result,error}=await sb.auth.signUp({email,password});
+      if(error) throw error;
+      if(!result.session){
+        showAuthMessage("Pendaftaran berhasil. Periksa email untuk konfirmasi akun, lalu masuk.","success");
+      }else{
+        showAuthMessage("Akun berhasil dibuat.","success");
+      }
+    }else{
+      const {error}=await sb.auth.signInWithPassword({email,password});
+      if(error) throw error;
+    }
+  }catch(err){
+    showAuthMessage(err.message||"Terjadi kesalahan.");
+  }finally{
+    $("authSubmit").disabled=false;
+    $("authSubmit").textContent=authMode==="login"?"Masuk":"Buat akun";
+  }
 });
 
+$("logoutBtn").addEventListener("click",async()=>{
+  const {error}=await sb.auth.signOut();
+  if(error) toast(error.message,"error");
+});
 
-flashBtn.textContent =
-torch
-?
-"🔦 Matikan Flash"
-:
-"🔦 Nyalakan Flash";
+sb.auth.onAuthStateChange((_event,session)=>{
+  setTimeout(()=>boot(session?.user||null),0);
+});
 
-
-statusBox.textContent =
-torch
-?
-"🔦 Flash menyala."
-:
-"🔦 Flash dimatikan.";
-
-}catch(error){
-
-console.error(error);
-
-statusBox.textContent =
-"❌ Flash tidak dapat digunakan.";
-
+async function boot(currentUser){
+  user=currentUser;
+  $("authScreen").classList.toggle("hidden",!!user);
+  $("appScreen").classList.toggle("hidden",!user);
+  if(!user) return;
+  $("userLabel").textContent=user.email||"Akun";
+  await loadData();
+  renderNav();
+  render();
 }
 
+async function loadData(){
+  try{
+    const {data:row,error}=await sb.from("finora_data")
+      .select("payload").eq("user_id",user.id).maybeSingle();
+    if(error) throw error;
+    if(row && row.payload){
+      const p=row.payload;
+      data={
+        ...defaults(),
+        ...p,
+        transactions:Array.isArray(p.transactions)?p.transactions:[],
+        wallets:Array.isArray(p.wallets)?p.wallets:[],
+        budgets:Array.isArray(p.budgets)?p.budgets:[],
+        goals:Array.isArray(p.goals)?p.goals:[],
+        settings:p.settings||{currency:"IDR"}
+      };
+    }else{
+      data=defaults();
+      await saveData(true);
+    }
+  }catch(err){
+    toast("Gagal memuat data: "+err.message,"error");
+  }
 }
-);
 
-
-/* ==================================================
-   STOP CAMERA
-================================================== */
-
-stopBtn.addEventListener(
-"click",
-function(){
-
-stopDetection();
-
-
-if(stream){
-
-stream
-.getTracks()
-.forEach(
-track =>
-track.stop()
-);
-
+async function saveData(silent=false){
+  if(!user) return;
+  if(saving){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>saveData(silent),700);
+    return;
+  }
+  saving=true;
+  try{
+    const {error}=await sb.from("finora_data").upsert({
+      user_id:user.id,
+      payload:data,
+      updated_at:new Date().toISOString()
+    },{onConflict:"user_id"});
+    if(error) throw error;
+    if(!silent) toast("Data berhasil disimpan.","success");
+  }catch(err){
+    toast("Gagal menyimpan data: "+err.message,"error");
+  }finally{
+    saving=false;
+  }
 }
 
-
-stream = null;
-
-video.srcObject = null;
-
-placeholder.style.display =
-"grid";
-
-startBtn.disabled = false;
-
-stopBtn.disabled = true;
-
-setOnline(false);
-
-torch = false;
-
-fireActive = false;
-
-fireFrames = 0;
-
-clearFrames = 0;
-
-scoreBox.textContent = "0%";
-
-frame.classList.remove("danger");
-
-statusBox.classList.remove("danger");
-
-statusBox.classList.remove("safe");
-
-statusBox.textContent =
-"Kamera dimatikan.";
-
-addLog(
-"Kamera dimatikan."
-);
-
+function mutate(){
+  render();
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>saveData(true),400);
 }
-);
 
-
-/* ==================================================
-   START BUTTON
-================================================== */
-
-startBtn.addEventListener(
-"click",
-function(){
-
-startCamera();
-
+function renderNav(){
+  const html=pages.map(([id,icon,label])=>
+    `<button data-page="${id}" class="${page===id?"active":""}">${icon} &nbsp;${label}</button>`
+  ).join("");
+  $("sideNav").innerHTML=html;
+  $("mobileNav").innerHTML=html;
+  document.querySelectorAll("[data-page]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      page=btn.dataset.page;
+      renderNav();
+      render();
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  });
 }
-);
 
-
-/* ==================================================
-   CLOSE ALERT
-================================================== */
-
-closeBtn.addEventListener(
-"click",
-function(){
-
-overlay.classList.remove("show");
-
+function totals(list=data.transactions){
+  return list.reduce((a,t)=>{
+    if(t.type==="income") a.income+=Number(t.amount)||0;
+    else a.expense+=Number(t.amount)||0;
+    return a;
+  },{income:0,expense:0});
 }
-);
+function monthTransactions(){
+  return data.transactions.filter(t=>(t.date||"").startsWith(monthNow()));
+}
+function walletBalance(walletId){
+  const w=data.wallets.find(x=>x.id===walletId);
+  const opening=Number(w?.balance)||0;
+  return opening+data.transactions.filter(t=>t.walletId===walletId)
+    .reduce((sum,t)=>sum+(t.type==="income"?1:-1)*(Number(t.amount)||0),0);
+}
+function totalBalance(){
+  return data.wallets.reduce((sum,w)=>sum+walletBalance(w.id),0);
+}
+function moneyField(value){
+  return Number(value)||0;
+}
+function empty(text){
+  return `<div class="empty">${escapeHTML(text)}</div>`;
+}
+function stat(label,value,icon,sub=""){
+  return `<div class="card"><div class="stat-icon">${icon}</div><div class="stat-label">${label}</div><div class="stat-value">${value}</div><div class="muted small" style="margin-top:9px">${sub}</div></div>`;
+}
+function pageHeader(title,sub,action=""){
+  return `<div class="page-title"><div><h2>${title}</h2><div class="muted small">${sub}</div></div>${action}</div>`;
+}
+function btn(label,action,cls=""){
+  return `<button type="button" class="${cls}" data-action="${action}">${label}</button>`;
+}
+function txCategory(t){
+  return t.category||"Lainnya";
+}
+function transactionRows(list){
+  if(!list.length) return empty("Belum ada transaksi.");
+  const rows=[...list].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  return `<div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Transaksi</th><th>Dompet</th><th>Jumlah</th><th></th></tr></thead><tbody>
+  ${rows.map(t=>{
+    const wallet=data.wallets.find(w=>w.id===t.walletId);
+    return `<tr>
+      <td>${escapeHTML(t.date||"-")}</td>
+      <td><strong>${escapeHTML(t.title)}</strong><div class="muted small">${escapeHTML(txCategory(t))}</div></td>
+      <td>${escapeHTML(wallet?.name||"Dompet dihapus")}</td>
+      <td class="${t.type==="income"?"income":"expense"}">${t.type==="income"?"+":"−"}${rupiah(t.amount)}</td>
+      <td><button data-action="delete-tx" data-id="${escapeHTML(t.id)}" class="danger">Hapus</button></td>
+    </tr>`;
+  }).join("")}</tbody></table></div>`;
+}
+function chartMarkup(){
+  const months=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();
+    d.setDate(1);d.setMonth(d.getMonth()-i);
+    const key=d.toLocaleDateString("sv-SE").slice(0,7);
+    months.push({key,label:d.toLocaleDateString("id-ID",{month:"short"}),income:0,expense:0});
+  }
+  data.transactions.forEach(t=>{
+    const m=months.find(x=>x.key===(t.date||"").slice(0,7));
+    if(m) m[t.type==="income"?"income":"expense"]+=Number(t.amount)||0;
+  });
+  const max=Math.max(1,...months.flatMap(m=>[m.income,m.expense]));
+  return `<canvas id="chart" aria-label="Grafik pemasukan dan pengeluaran"></canvas>
+  <div class="muted small">● Pemasukan &nbsp;&nbsp; <span class="expense">● Pengeluaran</span></div>`;
+}
+function drawChart(){
+  const canvas=$("chart");
+  if(!canvas) return;
+  const rect=canvas.getBoundingClientRect();
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=Math.max(1,rect.width*dpr);
+  canvas.height=230*dpr;
+  const ctx=canvas.getContext("2d");
+  ctx.scale(dpr,dpr);
+  const W=rect.width,H=230;
+  const months=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);
+    const key=d.toLocaleDateString("sv-SE").slice(0,7);
+    months.push({key,label:d.toLocaleDateString("id-ID",{month:"short"}),income:0,expense:0});
+  }
+  data.transactions.forEach(t=>{
+    const m=months.find(x=>x.key===(t.date||"").slice(0,7));
+    if(m) m[t.type==="income"?"income":"expense"]+=Number(t.amount)||0;
+  });
+  const max=Math.max(1,...months.flatMap(m=>[m.income,m.expense]));
+  const left=10,bottom=30,top=15,plotH=H-top-bottom;
+  const groupW=(W-left-10)/6;
+  ctx.font="11px sans-serif";
+  months.forEach((m,i)=>{
+    const x=left+i*groupW+groupW*.2;
+    const bw=Math.min(15,groupW*.27);
+    const h1=m.income/max*plotH;
+    const h2=m.expense/max*plotH;
+    ctx.fillStyle="#45d6a0";
+    ctx.fillRect(x,H-bottom-h1,bw,h1);
+    ctx.fillStyle="#ff6b81";
+    ctx.fillRect(x+bw+3,H-bottom-h2,bw,h2);
+    ctx.fillStyle="#93a0bb";
+    ctx.textAlign="center";
+    ctx.fillText(m.label,x+groupW*.3,H-8);
+  });
+}
+function renderDashboard(){
+  const ts=totals(monthTransactions());
+  const balance=totalBalance();
+  const net=ts.income-ts.expense;
+  const recent=[...data.transactions].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,5);
+  return pageHeader("Dashboard","Ringkasan kondisi keuanganmu",btn("+ Transaksi","add-tx","primary"))+
+    `<div class="grid">
+      ${stat("Total saldo",rupiah(balance),"▣","Semua dompet")}
+      ${stat("Pemasukan bulan ini",rupiah(ts.income),"↗","Bulan berjalan")}
+      ${stat("Pengeluaran bulan ini",rupiah(ts.expense),"↘","Bulan berjalan")}
+      ${stat("Selisih bulan ini",rupiah(net),"◈",net>=0?"Surplus":"Defisit")}
+    </div>
+    <div class="two-col">
+      <div class="card"><h3>Arus kas · 6 bulan</h3>${chartMarkup()}</div>
+      <div class="card"><h3>Anggaran bulan ini</h3>${budgetSummary()}</div>
+    </div>
+    <div class="card"><h3>Transaksi terbaru</h3>${transactionRows(recent)}</div>`;
+}
+function budgetSummary(){
+  const current=data.budgets.filter(b=>!b.month||b.month===monthNow());
+  if(!current.length) return empty("Belum ada anggaran. Tambahkan anggaran untuk memantau pengeluaran.");
+  return current.map(b=>{
+    const spent=data.transactions.filter(t=>t.type==="expense"&&t.category===b.category&&
+      (t.date||"").startsWith(monthNow())).reduce((s,t)=>s+Number(t.amount),0);
+    const pct=Math.min(100,spent/Math.max(1,Number(b.amount))*100);
+    return `<div class="item"><div class="item-head"><strong>${escapeHTML(b.category)}</strong><span class="small">${rupiah(spent)} / ${rupiah(b.amount)}</span></div><div class="progress"><span style="width:${pct}%"></span></div><div class="muted small">${pct.toFixed(0)}% terpakai</div></div>`;
+  }).join("");
+}
+function renderTransactions(){
+  return pageHeader("Transaksi","Catat pemasukan dan pengeluaran",btn("+ Tambah transaksi","add-tx","primary"))+
+  `<div class="card"><div class="toolbar">
+    <input id="txSearch" placeholder="Cari transaksi..." style="flex:1;min-width:150px">
+    <select id="txFilter" style="width:auto"><option value="all">Semua tipe</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select>
+  </div><div id="txTable">${transactionRows(data.transactions)}</div></div>`;
+}
+function renderWallets(){
+  const sum=data.wallets.reduce((s,w)=>s+walletBalance(w.id),0);
+  return pageHeader("Dompet","Kelola saldo berdasarkan tempat penyimpanan",btn("+ Tambah dompet","add-wallet","primary"))+
+  `<div class="grid">${stat("Total saldo",rupiah(sum),"▣","Semua dompet")}</div>
+  <div class="grid">${data.wallets.map(w=>`<div class="card"><div class="stat-icon">▣</div><h3>${escapeHTML(w.name)}</h3><div class="stat-value">${rupiah(walletBalance(w.id))}</div><div class="muted small" style="margin-top:10px">Saldo awal ${rupiah(w.balance)}</div><div style="margin-top:12px">${btn("Hapus","delete-wallet")}<input type="hidden" value="${escapeHTML(w.id)}"></div></div>`).join("")||empty("Belum ada dompet.")}</div>`;
+}
+function renderBudgets(){
+  return pageHeader("Anggaran","Batas pengeluaran per kategori",btn("+ Buat anggaran","add-budget","primary"))+
+  `<div class="card">${budgetSummary()}
+  ${data.budgets.map(b=>`<div class="item item-head"><span>${escapeHTML(b.category)} · ${rupiah(b.amount)}</span>${btn("Hapus","delete-budget") }<input type="hidden" value="${escapeHTML(b.id)}"></div>`).join("")}</div>`;
+}
+function renderGoals(){
+  return pageHeader("Target tabungan","Pantau progres tujuan keuanganmu",btn("+ Target baru","add-goal","primary"))+
+  `<div class="grid">${data.goals.map(g=>{
+    const pct=Math.min(100,Number(g.saved)/Math.max(1,Number(g.target))*100);
+    return `<div class="card"><div class="stat-icon">◎</div><h3>${escapeHTML(g.name)}</h3><div class="stat-value">${rupiah(g.saved)}</div><div class="muted small">Target ${rupiah(g.target)}</div><div class="progress"><span style="width:${pct}%"></span></div><div class="item-head"><span class="small">${pct.toFixed(1)}% tercapai</span>${btn("Tambah dana","fund-goal")}</div><input type="hidden" value="${escapeHTML(g.id)}"><div style="margin-top:12px">${btn("Hapus target","delete-goal")}</div></div>`;
+  }).join("")||empty("Belum ada target tabungan.")}</div>`;
+}
+function renderReports(){
+  const ts=totals();
+  const cats={};
+  data.transactions.filter(t=>t.type==="expense").forEach(t=>cats[t.category||"Lainnya"]=(cats[t.category||"Lainnya"]||0)+Number(t.amount));
+  const catRows=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  return pageHeader("Laporan","Ringkasan seluruh transaksi",btn("Ekspor CSV","export-csv"))+
+  `<div class="grid">
+  ${stat("Total pemasukan",rupiah(ts.income),"↗","Semua waktu")}
+  ${stat("Total pengeluaran",rupiah(ts.expense),"↘","Semua waktu")}
+  ${stat("Selisih",rupiah(ts.income-ts.expense),"◈","Pemasukan dikurangi pengeluaran")}
+  ${stat("Jumlah transaksi",String(data.transactions.length),"⇄","Semua waktu")}
+  </div><div class="two-col">
+    <div class="card"><h3>Grafik arus kas</h3>${chartMarkup()}</div>
+    <div class="card"><h3>Pengeluaran per kategori</h3>
+    ${catRows.map(([name,amount])=>`<div class="item item-head"><span>${escapeHTML(name)}</span><strong>${rupiah(amount)}</strong></div>`).join("")||empty("Belum ada pengeluaran.")}
+    </div>
+  </div><div class="card"><h3>Semua transaksi</h3>${transactionRows(data.transactions)}</div>`;
+}
+function renderSettings(){
+  return pageHeader("Pengaturan","Kelola data akun Finora")+
+  `<div class="two-col">
+    <div class="card"><h3>Backup data</h3><p class="muted small">Unduh salinan data keuangan dalam format JSON.</p>${btn("Unduh backup JSON","backup-json","primary")}<div style="height:12px"></div>${btn("Ekspor transaksi CSV","export-csv")}</div>
+    <div class="card"><h3>Pulihkan data</h3><p class="muted small">Impor backup JSON yang sebelumnya dibuat dari Finora. Data saat ini akan diganti.</p>
+    <input type="file" id="restoreFile" accept=".json,application/json"><div style="height:12px"></div>${btn("Pulihkan backup","restore-json","primary")}</div>
+    <div class="card"><h3>Keamanan akun</h3><p class="muted small">Supabase mengelola password akunmu.</p>${btn("Kirim email reset password","reset-password")}</div>
+    <div class="card"><h3>Informasi aplikasi</h3><p>Finora Personal Finance</p><p class="muted small">Data disimpan per akun menggunakan Supabase.</p><p class="muted small">Pastikan selalu membuat backup secara berkala.</p></div>
+  </div>`;
+}
+function render(){
+  if(!user) return;
+  const views={
+    dashboard:renderDashboard,
+    transactions:renderTransactions,
+    wallets:renderWallets,
+    budgets:renderBudgets,
+    goals:renderGoals,
+    reports:renderReports,
+    settings:renderSettings
+  };
+  $("pageContent").innerHTML=(views[page]||renderDashboard)();
+  bindActions();
+  if(page==="dashboard"||page==="reports") drawChart();
+}
+function bindActions(){
+  document.querySelectorAll("[data-action]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const action=b.dataset.action;
+      const card=b.closest(".card");
+      const hiddenId=card?.querySelector('input[type="hidden"]')?.value;
+      switch(action){
+        case "add-tx": openTransactionForm();break;
+        case "add-wallet": openWalletForm();break;
+        case "add-budget": openBudgetForm();break;
+        case "add-goal": openGoalForm();break;
+        case "delete-tx": deleteTransaction(b.dataset.id);break;
+        case "delete-wallet": deleteWallet(hiddenId);break;
+        case "delete-budget": deleteBudget(hiddenId);break;
+        case "delete-goal": deleteGoal(hiddenId);break;
+        case "fund-goal": openFundForm(hiddenId);break;
+        case "export-csv": exportCSV();break;
+        case "backup-json": backupJSON();break;
+        case "restore-json": restoreJSON();break;
+        case "reset-password": resetPassword();break;
+      }
+    });
+  });
+  const search=$("txSearch");
+  if(search) search.addEventListener("input",filterTransactions);
+  const filter=$("txFilter");
+  if(filter) filter.addEventListener("change",filterTransactions);
+}
+function filterTransactions(){
+  const q=($("txSearch")?.value||"").toLowerCase();
+  const type=$("txFilter")?.value||"all";
+  const filtered=data.transactions.filter(t=>
+    (type==="all"||t.type===type)&&
+    [t.title,t.category,t.date].some(v=>String(v||"").toLowerCase().includes(q))
+  );
+  $("txTable").innerHTML=transactionRows(filtered);
+  bindActions();
+}
+function openModal(title,html,onSubmit){
+  $("modalTitle").textContent=title;
+  $("modalBody").innerHTML=html;
+  $("modal").classList.remove("hidden");
+  const form=$("modalBody").querySelector("form");
+  if(form) form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const submit=form.querySelector('[type="submit"]');
+    if(submit) submit.disabled=true;
+    try{await onSubmit(new FormData(form));}
+    catch(err){toast(err.message||"Terjadi kesalahan","error");}
+    finally{if(submit) submit.disabled=false;}
+  });
+}
+function closeModal(){$("modal").classList.add("hidden");}
+$("modalClose").addEventListener("click",closeModal);
+$("modal").addEventListener("click",e=>{if(e.target===$("modal"))closeModal();});
 
+function openTransactionForm(){
+  if(!data.wallets.length){toast("Buat dompet terlebih dahulu.","error");return;}
+  openModal("Tambah transaksi",`
+  <form>
+    <div class="field"><label>Jenis transaksi</label><select name="type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select></div>
+    <div class="field"><label>Nama transaksi</label><input name="title" required maxlength="100" placeholder="Contoh: Belanja bulanan"></div>
+    <div class="form-grid">
+      <div class="field"><label>Jumlah (Rp)</label><input name="amount" type="number" min="1" step="1" required></div>
+      <div class="field"><label>Tanggal</label><input name="date" type="date" value="${today()}" required></div>
+    </div>
+    <div class="field"><label>Kategori</label><select name="category">
+      <option>Makanan</option><option>Transportasi</option><option>Belanja</option><option>Tagihan</option><option>Gaji</option><option>Bisnis</option><option>Hiburan</option><option>Kesehatan</option><option>Pendidikan</option><option>Investasi</option><option>Lainnya</option>
+    </select></div>
+    <div class="field"><label>Dompet</label><select name="walletId">${data.wallets.map(w=>`<option value="${escapeHTML(w.id)}">${escapeHTML(w.name)}</option>`).join("")}</select></div>
+    <div class="field"><label>Catatan (opsional)</label><textarea name="note" rows="2"></textarea></div>
+    <button class="primary" type="submit" style="width:100%">Simpan transaksi</button>
+  </form>`,async f=>{
+    const amount=Number(f.get("amount"));
+    if(!Number.isFinite(amount)||amount<=0) throw new Error("Jumlah harus lebih dari nol.");
+    data.transactions.push({
+      id:uid(),type:f.get("type"),title:f.get("title").trim(),
+      amount,date:f.get("date"),category:f.get("category"),
+      walletId:f.get("walletId"),note:f.get("note")||""
+    });
+    closeModal();mutate();await saveData(true);toast("Transaksi disimpan.","success");
+  });
+}
+function openWalletForm(){
+  openModal("Tambah dompet",`
+  <form><div class="field"><label>Nama dompet</label><input name="name" required maxlength="50" placeholder="Contoh: Rekening Bank"></div>
+  <div class="field"><label>Saldo awal (Rp)</label><input name="balance" type="number" min="0" step="1" value="0" required></div>
+  <button class="primary" type="submit" style="width:100%">Simpan dompet</button></form>`,async f=>{
+    data.wallets.push({id:uid(),name:f.get("name").trim(),balance:Number(f.get("balance"))||0});
+    closeModal();mutate();await saveData(true);toast("Dompet ditambahkan.","success");
+  });
+}
+function openBudgetForm(){
+  openModal("Buat anggaran",`
+  <form><div class="field"><label>Kategori</label><select name="category"><option>Makanan</option><option>Transportasi</option><option>Belanja</option><option>Tagihan</option><option>Hiburan</option><option>Kesehatan</option><option>Pendidikan</option><option>Lainnya</option></select></div>
+  <div class="field"><label>Batas anggaran (Rp)</label><input name="amount" type="number" min="1" required></div>
+  <button class="primary" type="submit" style="width:100%">Simpan anggaran</button></form>`,async f=>{
+    data.budgets.push({id:uid(),category:f.get("category"),amount:Number(f.get("amount")),month:monthNow()});
+    closeModal();mutate();await saveData(true);toast("Anggaran dibuat.","success");
+  });
+}
+function openGoalForm(){
+  openModal("Target tabungan",`
+  <form><div class="field"><label>Nama target</label><input name="name" required maxlength="80" placeholder="Contoh: Laptop baru"></div>
+  <div class="field"><label>Target (Rp)</label><input name="target" type="number" min="1" required></div>
+  <div class="field"><label>Tabungan saat ini (Rp)</label><input name="saved" type="number" min="0" value="0" required></div>
+  <button class="primary" type="submit" style="width:100%">Simpan target</button></form>`,async f=>{
+    data.goals.push({id:uid(),name:f.get("name").trim(),target:Number(f.get("target")),saved:Number(f.get("saved"))||0});
+    closeModal();mutate();await saveData(true);toast("Target tabungan dibuat.","success");
+  });
+}
+function openFundForm(id){
+  const goal=data.goals.find(g=>g.id===id);
+  if(!goal)return;
+  openModal("Tambah tabungan",`
+  <p>Target: <strong>${escapeHTML(goal.name)}</strong></p>
+  <p class="muted small">Terkumpul ${rupiah(goal.saved)} dari ${rupiah(goal.target)}</p>
+  <form><div class="field"><label>Jumlah tambahan (Rp)</label><input name="amount" type="number" min="1" required></div>
+  <button class="primary" type="submit" style="width:100%">Tambah dana</button></form>`,async f=>{
+    goal.saved+=Number(f.get("amount"));
+    closeModal();mutate();await saveData(true);toast("Tabungan diperbarui.","success");
+  });
+}
+async function deleteTransaction(id){
+  if(!confirm("Hapus transaksi ini?"))return;
+  data.transactions=data.transactions.filter(t=>t.id!==id);
+  mutate();await saveData(true);toast("Transaksi dihapus.");
+}
+async function deleteWallet(id){
+  if(!id)return;
+  if(data.transactions.some(t=>t.walletId===id)){toast("Dompet masih memiliki transaksi. Hapus atau pindahkan transaksi terlebih dahulu.","error");return;}
+  if(!confirm("Hapus dompet ini?"))return;
+  data.wallets=data.wallets.filter(w=>w.id!==id);
+  mutate();await saveData(true);toast("Dompet dihapus.");
+}
+async function deleteBudget(id){
+  if(!id)return;
+  if(!confirm("Hapus anggaran ini?"))return;
+  data.budgets=data.budgets.filter(b=>b.id!==id);
+  mutate();await saveData(true);toast("Anggaran dihapus.");
+}
+async function deleteGoal(id){
+  if(!id)return;
+  if(!confirm("Hapus target tabungan ini?"))return;
+  data.goals=data.goals.filter(g=>g.id!==id);
+  mutate();await saveData(true);toast("Target dihapus.");
+}
+function downloadFile(name,content,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function backupJSON(){
+  downloadFile("finora-backup-"+today()+".json",JSON.stringify(data,null,2),"application/json");
+  toast("Backup JSON dibuat.","success");
+}
+function csvEscape(value){
+  const s=String(value??"");
+  return '"'+s.replace(/"/g,'""')+'"';
+}
+function exportCSV(){
+  const rows=[["Tanggal","Jenis","Nama","Kategori","Dompet","Jumlah","Catatan"]];
+  data.transactions.forEach(t=>{
+    const w=data.wallets.find(x=>x.id===t.walletId);
+    rows.push([t.date,t.type==="income"?"Pemasukan":"Pengeluaran",t.title,t.category,w?.name||"",t.amount,t.note||""]);
+  });
+  const csv="\uFEFF"+rows.map(r=>r.map(csvEscape).join(",")).join("\r\n");
+  downloadFile("finora-transaksi-"+today()+".csv",csv,"text/csv;charset=utf-8");
+  toast("CSV berhasil diekspor.","success");
+}
+async function restoreJSON(){
+  const file=$("restoreFile").files[0];
+  if(!file){toast("Pilih file backup JSON terlebih dahulu.","error");return;}
+  if(!confirm("Data saat ini akan diganti dengan isi backup. Lanjutkan?"))return;
+  try{
+    const parsed=JSON.parse(await file.text());
+    if(!parsed||!Array.isArray(parsed.transactions)||!Array.isArray(parsed.wallets)||
+       !Array.isArray(parsed.budgets)||!Array.isArray(parsed.goals)){
+      throw new Error("Format backup tidak valid.");
+    }
+    data={
+      transactions:parsed.transactions,
+      wallets:parsed.wallets,
+      budgets:parsed.budgets,
+      goals:parsed.goals,
+      settings:parsed.settings||{currency:"IDR"}
+    };
+    await saveData(true);render();toast("Backup berhasil dipulihkan.","success");
+  }catch(err){toast("Gagal memulihkan backup: "+err.message,"error");}
+}
+async function resetPassword(){
+  if(!user?.email)return;
+  const {error}=await sb.auth.resetPasswordForEmail(user.email,{
+    redirectTo:location.origin+location.pathname
+  });
+  if(error)toast(error.message,"error");
+  else toast("Email reset password telah diminta.","success");
+}
 
-/* ==================================================
-   INITIAL
-================================================== */
+window.addEventListener("resize",()=>{
+  if(page==="dashboard"||page==="reports")drawChart();
+});
 
-setOnline(false);
-
-addLog(
-"Aplikasi siap digunakan."
-);
-
-addLog(
-"Kamera depan adalah kamera awal."
-);
-
+(async()=>{
+  setAuthMode("login");
+  const {data:result,error}=await sb.auth.getSession();
+  if(error)showAuthMessage(error.message);
+  await boot(result?.session?.user||null);
+})();
 </script>
-
 </body>
 </html>
